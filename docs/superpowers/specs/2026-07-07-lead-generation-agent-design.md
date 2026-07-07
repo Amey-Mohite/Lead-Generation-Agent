@@ -109,9 +109,11 @@ runtime from ENV. The seams that must exist from day one:
 - **Behavior:** a ReAct-style loop — it *decides* what to search, issues queries via the
   `web_search` tool, reads results, `fetch_url`s promising pages, follows up, and stops
   when it has enough evidence.
-- **Search mode flag** (`RESEARCH_SEARCH_MODE`):
-  - `api` — calls an external search API (`SEARCH_PROVIDER`: tavily/serpapi/brave).
-  - `native` — uses a web-search-enabled model's built-in search (e.g. Perplexity via OpenRouter).
+- **Search mode flag** (`RESEARCH_SEARCH_MODE`, default `native`):
+  - `native` (**default**) — web-first: uses a web-search-enabled model's built-in search
+    (e.g. Perplexity/`:online` models via OpenRouter). Fewest moving parts, no extra key.
+  - `api` — calls an external search API (`SEARCH_PROVIDER`: tavily/serpapi/brave) for
+    finer control / provider-independence.
   - `mock` — offline canned results so demos run with zero keys.
 - **Output:** a structured, cited **`ResearchBrief`** (company facts, industry, size,
   tech signals, contacts, sources).
@@ -171,9 +173,9 @@ NVIDIA_API_KEY=
 OPENAI_API_KEY=
 ANTHROPIC_API_KEY=
 
-# Research / search
-RESEARCH_SEARCH_MODE=api         # api|native|mock
-SEARCH_PROVIDER=tavily           # tavily|serpapi|brave
+# Research / search  (default: native = the model does its own web search)
+RESEARCH_SEARCH_MODE=native      # native|api|mock
+SEARCH_PROVIDER=tavily           # used when mode=api: tavily|serpapi|brave
 SEARCH_API_KEY=
 
 # Outputs
@@ -263,7 +265,7 @@ app/
   observability/  # logging, metrics, langfuse tracing
   config.py       # pydantic-settings
   main.py
-ui/               # minimal dashboard
+ui/               # React dashboard (Vite) — its own build, calls the API
 n8n/              # exported workflow JSON
 deploy/           # docker-compose, k8s manifests / helm
 tests/
@@ -296,7 +298,7 @@ Each phase ends with: tests green, README updated, a commit, and a short explain
 5. **Persistence + logging** — Postgres models, repositories, `agent_runs`, `request_logs`, Alembic.
 6. **API** — `/v1/leads` etc., auth, rate limiting, OpenAPI.
 7. **Exporters** — `excel` (folder) first; then `slack`, `email`, `gmail`.
-8. **Dashboard UI** — submit domain, live research, lead + draft view.
+8. **Dashboard UI (React + Vite)** — submit domain, live research, lead + draft view.
 9. **Observability** — Langfuse tracing, Prometheus metrics.
 10. **n8n** — trigger + human-approval-and-send + alerting workflows.
 11. **Deploy** — compose → minikube manifests/Helm.
@@ -306,7 +308,9 @@ Each phase ends with: tests green, README updated, a commit, and a short explain
 
 ## 16. Open Decisions (defaults chosen; revisit if needed)
 
-- **Default LLM provider/model:** OpenRouter (broadest, one key for many models). Revisit.
-- **Default search mode:** `mock` for first runs → `api`(tavily) once keys are added.
+- **Default LLM provider/model:** OpenRouter as the shipped default value, but the hard
+  requirement is **easy switchability** — one ENV line swaps to NVIDIA/OpenAI/Anthropic/local.
+- **Default search mode:** `native` (web-first, model does its own search); `mock` for
+  offline/zero-key demos; `api`(tavily) when finer control is wanted.
 - **Streaming responses:** deferred to a later enhancement (v1 returns full responses).
-- **Dashboard stack:** minimal HTML+JS served by FastAPI (no React) unless we choose otherwise.
+- **Dashboard stack:** **React (Vite)** — its own build, talks to the FastAPI API.
