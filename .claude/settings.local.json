@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(./.venv/Scripts/python.exe -m pip list)",
+      "Bash(./.venv/Scripts/python.exe -m pytest tests/test_health.py -v)",
+      "Bash(./.venv/Scripts/python.exe -c \"from app.main import app; print\\('ASGI app OK:', app.title, app.version\\); print\\('routes:', sorted\\(r.path for r in app.routes if hasattr\\(r,'path'\\)\\)\\)\")",
+      "Bash(./.venv/Scripts/python.exe -c ' *)",
+      "Bash(git add *)",
+      "Bash(git commit -q -m 'feat: FastAPI app factory and /health endpoint *)",
+      "Bash(./.venv/Scripts/python.exe -m pytest tests/test_ready.py -v)",
+      "Bash(./.venv/Scripts/python.exe -m pytest -v)",
+      "Bash(git commit -q -m 'feat: DB engine and /ready readiness probe *)",
+      "Bash(docker compose *)",
+      "Bash(docker info *)",
+      "Bash(echo \"EXIT=$?\")",
+      "Bash(git commit -q -m 'feat: Dockerfile and docker-compose \\(app + postgres\\) *)",
+      "Bash(git commit -q -m 'docs: portfolio README skeleton with quickstart *)"
+    ]
+  }
+}
