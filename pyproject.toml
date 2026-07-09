@@ -13,6 +13,8 @@ dependencies = [
     "pydantic-settings>=2.4",
     "sqlalchemy>=2.0",
     "psycopg[binary]>=3.2",
+    "openai>=1.40",
+    "anthropic>=0.39",
 ]
 
 [project.optional-dependencies]
