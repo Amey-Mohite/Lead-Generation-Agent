@@ -18,6 +18,14 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 1 — Foundati
 - [ ] Phase 4 — Orchestrator agent (qualify + draft)
 - [ ] Phases 5–12 — persistence, API, exporters, dashboard, observability, n8n, deploy
 
+## Documentation
+
+- **📚 Learning guides** (understand the flow, the why/how) — [`docs/learning/`](docs/learning/README.md)
+  - [Phase 1 — Foundations](docs/learning/phase-1-foundations.md)
+  - [Phase 2 — Multi-Provider LLM Layer](docs/learning/phase-2-llm-provider-layer.md)
+- **Design spec** (system-level decisions) — `docs/superpowers/specs/2026-07-07-lead-generation-agent-design.md`
+- **Build plans** (step-by-step) — `docs/superpowers/plans/`
+
 ## Architecture
 
 See the design spec: `docs/superpowers/specs/2026-07-07-lead-generation-agent-design.md`.
