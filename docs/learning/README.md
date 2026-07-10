@@ -9,6 +9,13 @@ Read these if you want to *understand* the code, not just run it.
 |-------|--------|
 | [Phase 1 — Foundations](phase-1-foundations.md) | Config, FastAPI app factory, health vs readiness, Postgres, Docker. The skeleton every request rides on. |
 | [Phase 2 — Multi-Provider LLM Layer](phase-2-llm-provider-layer.md) | The provider abstraction: how "swap models via ENV" actually works, adapters, factory, fallback. |
+| [Phase 3 — Research Sub-Agent](phase-3-research-sub-agent.md) | The first real agent: the ReAct tool-calling loop, tools, search backends, structured output, bounded autonomy — plus an FAQ deep-dive from debugging real runs (message roles, why one action per turn, native vs. api trust trade-offs, how tracing/decorators work). |
+
+## Cookbooks (practical how-tos, not tied to one phase)
+
+| Guide | Covers |
+|-------|--------|
+| [How to Add a New Tool](how-to-add-a-tool.md) | The `Tool` protocol contract, a 6-step recipe, and a real worked example (`CurrentDateTool`) with tests — for extending the Research Agent or any future agent built the same way. |
 
 ## How to use these
 

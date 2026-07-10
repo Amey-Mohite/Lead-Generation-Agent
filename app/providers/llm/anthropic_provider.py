@@ -27,6 +27,7 @@ class AnthropicProvider:
         model: str | None = None,
         temperature: float = 0.7,
         max_tokens: int | None = None,
+        tools: list[dict] | None = None,
     ) -> LLMResponse:
         system = "\n".join(m.content for m in messages if m.role == "system")
         conversation = [
@@ -40,6 +41,7 @@ class AnthropicProvider:
             messages=conversation,
             max_tokens=max_tokens or 1024,
             temperature=temperature,
+            **({"tools": tools} if tools else {}),
         )
         text = "".join(block.text for block in resp.content if block.type == "text")
         return LLMResponse(
