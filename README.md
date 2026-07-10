@@ -14,7 +14,7 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 1 — Foundati
 
 - [x] Phase 1 — Foundations: config, FastAPI, Postgres, health/ready, Docker
 - [x] Phase 2 — Multi-provider LLM layer (OpenRouter/NVIDIA/OpenAI/Anthropic + fallback)
-- [ ] Phase 3 — Research sub-agent + tools
+- [x] Phase 3 — Research sub-agent + tools (ReAct loop, web_search/fetch_url, ResearchBrief)
 - [ ] Phase 4 — Orchestrator agent (qualify + draft)
 - [ ] Phases 5–12 — persistence, API, exporters, dashboard, observability, n8n, deploy
 

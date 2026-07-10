@@ -14,7 +14,17 @@
       "Bash(docker info *)",
       "Bash(echo \"EXIT=$?\")",
       "Bash(git commit -q -m 'feat: Dockerfile and docker-compose \\(app + postgres\\) *)",
-      "Bash(git commit -q -m 'docs: portfolio README skeleton with quickstart *)"
+      "Bash(git commit -q -m 'docs: portfolio README skeleton with quickstart *)",
+      "Bash(git checkout *)",
+      "Bash(./.venv/Scripts/python.exe -m pytest tests/schemas/test_research.py -v)",
+      "Bash(./.venv/Scripts/python.exe -m pytest tests/tools/test_tool_registry.py -v)",
+      "Bash(./.venv/Scripts/python.exe -m pytest tests/tools/test_search_mock.py -v)",
+      "Bash(./.venv/Scripts/python.exe -m pip install -q beautifulsoup4)",
+      "Bash(./.venv/Scripts/python.exe -c \"import bs4; print\\('bs4', bs4.__version__\\)\")",
+      "Bash(./.venv/Scripts/python.exe -m pytest tests/tools/test_web_search.py tests/tools/test_fetch_url.py -v)",
+      "Bash(./.venv/Scripts/python.exe -m pytest tests/agents -v)",
+      "Bash(./.venv/Scripts/python.exe scripts/try_research.py \"acme.com\" --demo)",
+      "Bash(./.venv/Scripts/python.exe -m pytest -q)"
     ]
   }
 }

@@ -1,5 +1,7 @@
 from types import SimpleNamespace
 
+import pytest
+
 from app.providers.llm.base import ChatMessage
 from app.providers.llm.openai_compatible import OpenAICompatibleProvider
 
@@ -56,3 +58,55 @@ def test_explicit_model_overrides_default():
     )
     provider.complete([ChatMessage(role="user", content="hi")], model="override")
     assert captured["model"] == "override"
+
+
+class _FakeResponses:
+    def __init__(self, captured):
+        self._captured = captured
+
+    def create(self, **kwargs):
+        self._captured.update(kwargs)
+        return SimpleNamespace(
+            output_text="native search answer",
+            model="resolved-openai-model",
+            status="completed",
+            usage=SimpleNamespace(input_tokens=20, output_tokens=15),
+        )
+
+
+class _FakeResponsesClient:
+    def __init__(self, captured):
+        self.responses = _FakeResponses(captured)
+
+
+def test_complete_native_search_calls_responses_api():
+    captured: dict = {}
+    provider = OpenAICompatibleProvider(
+        name="openai", default_model="gpt-default", client=_FakeResponsesClient(captured)
+    )
+    resp = provider.complete_native_search(
+        [
+            ChatMessage(role="system", content="be brief"),
+            ChatMessage(role="user", content="what's new today?"),
+        ]
+    )
+
+    assert resp.content == "native search answer"
+    assert resp.provider == "openai"
+    assert resp.model == "resolved-openai-model"
+    assert resp.prompt_tokens == 20
+    assert resp.completion_tokens == 15
+    assert resp.finish_reason == "completed"
+    # system pulled into instructions; only non-system in input
+    assert captured["instructions"] == "be brief"
+    assert captured["input"] == [{"role": "user", "content": "what's new today?"}]
+    assert captured["tools"] == [{"type": "web_search"}]
+    assert captured["model"] == "gpt-default"
+
+
+def test_complete_native_search_rejects_non_openai_provider():
+    provider = OpenAICompatibleProvider(
+        name="openrouter", default_model="m", client=_FakeClient({})
+    )
+    with pytest.raises(ValueError, match="only supported for provider 'openai'"):
+        provider.complete_native_search([ChatMessage(role="user", content="hi")])
