@@ -42,6 +42,11 @@ class Settings(BaseSettings):
 
     # Discovery (broad-query enumeration -> many candidate companies)
     discovery_max_results: int = 20
+    # Discovery dedup -- once a domain is in the leads table, skip re-processing it (permanent)
+    discovery_skip_seen_domains: bool = True
+    # Optional comma list of queries to sweep through in one run_discovery_sweep() call,
+    # e.g. "credit unions in the UK,building societies UK,SME lenders UK open banking"
+    discovery_queries: str = ""
     # Discovery's own search config -- independent of RESEARCH_SEARCH_MODE, since Discovery may
     # need a different search strategy than the Research Agent (e.g. Research in "api" mode while
     # Discovery uses "native", or vice versa).
@@ -63,7 +68,7 @@ class Settings(BaseSettings):
     langfuse_host: str | None = None
 
     # Infra / API
-    database_url: str = "postgresql+psycopg://leads:leads@localhost:5432/leads"
+    database_url: str = "postgresql+psycopg://postgres:password@localhost:5432/leadgen"
     api_key: str | None = None
     rate_limit_per_min: int = 60
 

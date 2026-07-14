@@ -74,3 +74,25 @@ def test_company_description_env_override(monkeypatch):
     monkeypatch.setenv("COMPANY_DESCRIPTION", "Acme Corp sells widgets.")
     s = Settings(_env_file=None)
     assert s.company_description == "Acme Corp sells widgets."
+
+
+def test_discovery_skip_seen_domains_default():
+    s = Settings(_env_file=None)
+    assert s.discovery_skip_seen_domains is True
+
+
+def test_discovery_skip_seen_domains_env_override(monkeypatch):
+    monkeypatch.setenv("DISCOVERY_SKIP_SEEN_DOMAINS", "false")
+    s = Settings(_env_file=None)
+    assert s.discovery_skip_seen_domains is False
+
+
+def test_discovery_queries_default_is_empty():
+    s = Settings(_env_file=None)
+    assert s.discovery_queries == ""
+
+
+def test_discovery_queries_env_override(monkeypatch):
+    monkeypatch.setenv("DISCOVERY_QUERIES", "credit unions in the UK,building societies UK")
+    s = Settings(_env_file=None)
+    assert s.discovery_queries == "credit unions in the UK,building societies UK"

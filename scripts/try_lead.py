@@ -60,6 +60,7 @@ class _ScriptedLLM:
 
 
 def main() -> None:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     args = [a for a in sys.argv[1:] if a != "--demo"]
     force_demo = "--demo" in sys.argv
     target = args[0] if args else "stripe.com"
@@ -97,6 +98,12 @@ def main() -> None:
 
     print("\n================ LEAD ================")
     print(lead.model_dump_json(indent=2))
+
+    if has_key and not force_demo:
+        from app.db.repository import build_lead_repository
+
+        build_lead_repository(settings).save(lead)
+        print("\nPersisted to Postgres.")
 
     from app.exporters.factory import build_exporters
 
