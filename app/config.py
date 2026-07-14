@@ -34,6 +34,21 @@ class Settings(BaseSettings):
     )
     icp_min_score_to_draft: int = 60
 
+    # Our own company/offering -- feeds the outreach draft step so emails pitch something
+    # concrete, rather than just knowing who the target is (that's what ICP_DESCRIPTION is for).
+    company_description: str = (
+        "Our company builds a product our prospective customers would benefit from."
+    )
+
+    # Discovery (broad-query enumeration -> many candidate companies)
+    discovery_max_results: int = 20
+    # Discovery's own search config -- independent of RESEARCH_SEARCH_MODE, since Discovery may
+    # need a different search strategy than the Research Agent (e.g. Research in "api" mode while
+    # Discovery uses "native", or vice versa).
+    lead_search_mode: str = "native"          # native|api|mock
+    lead_search_provider: str = "tavily"      # tavily|serpapi|brave
+    lead_search_api_key: str | None = None
+
     # Outputs
     exporters: str = "excel"                  # comma list: excel,slack,email,gmail
     export_dir: str = "./out/leads"

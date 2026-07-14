@@ -17,17 +17,27 @@ Rules:
 - Base your reasoning only on the research brief provided -- do not invent facts.
 - "score" and "reasoning" are both required."""
 
-_DRAFT_SYSTEM = """You are a sales development representative drafting a first-touch outreach
-email. Write a short, personalized message based on the company's research brief and why it
-qualifies as a good fit.
+_DRAFT_SYSTEM = """You are a sales development representative writing a first-touch outreach
+email on behalf of your own company (described below) to a prospective customer.
+
+Your company:
+{company_description}
+
+Write a short, personalized message based on the prospect's research brief and why it qualifies
+as a good fit, connecting a specific fact about the prospect to a specific, relevant benefit your
+company offers.
 
 Respond with ONE JSON object and nothing else:
-{"subject": "...", "body": "..."}
+{{"subject": "...", "body": "..."}}
 
 Rules:
-- Reference at least one specific fact from the research brief -- do not write a generic email.
+- Reference at least one specific fact from the prospect's research brief -- do not write a
+  generic email.
+- Reference at least one specific, relevant benefit or capability from your company's description
+  above -- do not write generic sales language.
 - Keep the body under 6 sentences.
-- Do not invent facts not present in the research brief or the qualification reasoning.
+- Do not invent facts not present in the research brief, the qualification reasoning, or your
+  company's description.
 - "subject" and "body" are both required."""
 
 
@@ -37,11 +47,13 @@ class LeadOrchestratorAgent:
         llm: LLMProvider,
         research_agent,
         icp_description: str,
+        company_description: str,
         min_score_to_draft: int = 60,
     ) -> None:
         self._llm = llm
         self._research_agent = research_agent
         self._icp_description = icp_description
+        self._company_description = company_description
         self._min_score_to_draft = min_score_to_draft
 
     def run(self, target: str) -> Lead:
@@ -74,7 +86,10 @@ class LeadOrchestratorAgent:
 
     def _draft(self, brief: ResearchBrief, qualification: Qualification) -> OutreachDraft:
         messages = [
-            ChatMessage(role="system", content=_DRAFT_SYSTEM),
+            ChatMessage(
+                role="system",
+                content=_DRAFT_SYSTEM.format(company_description=self._company_description),
+            ),
             ChatMessage(
                 role="user",
                 content=(
@@ -99,5 +114,6 @@ def build_lead_orchestrator_agent(settings) -> "LeadOrchestratorAgent":
         llm=llm,
         research_agent=research_agent,
         icp_description=settings.icp_description,
+        company_description=settings.company_description,
         min_score_to_draft=settings.icp_min_score_to_draft,
     )

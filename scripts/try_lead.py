@@ -76,6 +76,7 @@ def main() -> None:
             f"search_mode={settings.research_search_mode} target={target}"
         )
         print(f"ICP: {settings.icp_description}")
+        print(f"Company: {settings.company_description}")
         print(f"Min score to draft: {settings.icp_min_score_to_draft}")
         agent = build_lead_orchestrator_agent(settings)
     else:
@@ -88,6 +89,7 @@ def main() -> None:
             _ScriptedLLM(),
             _ScriptedResearchAgent(target),
             icp_description="Any company (demo mode)",
+            company_description="A demo company (demo mode).",
             min_score_to_draft=60,
         )
 
