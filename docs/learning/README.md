@@ -11,6 +11,7 @@ Read these if you want to *understand* the code, not just run it.
 | [Phase 2 — Multi-Provider LLM Layer](phase-2-llm-provider-layer.md) | The provider abstraction: how "swap models via ENV" actually works, adapters, factory, fallback. |
 | [Phase 3 — Research Sub-Agent](phase-3-research-sub-agent.md) | The first real agent: the ReAct tool-calling loop, tools, search backends, structured output, bounded autonomy — plus an FAQ deep-dive from debugging real runs (message roles, why one action per turn, native vs. api trust trade-offs, how tracing/decorators work). |
 | [Phase 4 — Lead Orchestrator Agent](phase-4-lead-orchestrator.md) | The "judgment" layer: qualifying a researched company against a config-driven ICP (score + reasoning), then conditionally drafting personalized outreach. Introduces `complete_structured()`, a reusable generalization of Phase 3's self-correcting JSON parsing. |
+| [Phase 5 — Discovery / LeadSource Layer](phase-5-discovery.md) | Closes the "you must already know the company" gap: a broad query becomes many real candidate companies via one structured extraction call, fanned out sequentially through the existing research → qualify → draft pipeline. |
 
 ## Cookbooks (practical how-tos, not tied to one phase)
 
@@ -38,7 +39,16 @@ Phase 1  Foundations ......... a running, observable web service (the "body")
 Phase 2  LLM layer ........... the ability to talk to any model (the "voice")
 Phase 3  Research agent ...... autonomous tool-using loop (the "senses" + "thinking")
 Phase 4  Orchestrator ........ qualify + draft (the "judgment")
-Phase 5+ Persistence, API, exporters, dashboard, observability, n8n, deploy
+Phase 5  Discovery ........... a query becomes many candidates (the "initiative")
+Phase 6  Exporters ........... Excel first, pluggable (the "handoff")
+Phase 7  Persistence ......... Postgres storage of Leads/runs/logs (the "memory")
+Phase 8  API layer ........... FastAPI endpoints exposing the pipeline as a service
+Phase 9  Dashboard ........... React UI
+Phase 10 Observability ....... Langfuse tracing, Prometheus metrics
+Phase 11 n8n .................. ingestion, human-approval sending, alerting
+Phase 12 Deploy ............... docker-compose -> minikube / Kubernetes
+Phase 13 Quality + polish ..... tests, eval harness, CI, demo GIF, README polish
 ```
 
-Each phase is independently testable and builds on the ones before it.
+Each phase is independently testable and builds on the ones before it. See the main
+[README](../../README.md) for current build status.

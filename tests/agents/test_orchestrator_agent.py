@@ -36,7 +36,8 @@ def test_qualified_lead_gets_a_draft():
     ]
     agent = LeadOrchestratorAgent(
         _ScriptedLLM(scripts), _FakeResearchAgent(_brief()),
-        icp_description="B2B companies", min_score_to_draft=60,
+        icp_description="B2B companies", company_description="We sell tools for widget makers.",
+        min_score_to_draft=60,
     )
     lead = agent.run("acme.com")
 
@@ -51,7 +52,8 @@ def test_disqualified_lead_skips_the_draft_call():
     llm = _ScriptedLLM(scripts)
     agent = LeadOrchestratorAgent(
         llm, _FakeResearchAgent(_brief()),
-        icp_description="B2B companies", min_score_to_draft=60,
+        icp_description="B2B companies", company_description="We sell tools for widget makers.",
+        min_score_to_draft=60,
     )
     lead = agent.run("acme.com")
 
@@ -79,10 +81,37 @@ def test_icp_description_is_included_in_the_qualify_prompt():
 
     agent = LeadOrchestratorAgent(
         _CapturingLLM(), _FakeResearchAgent(_brief()),
-        icp_description="ONLY-FINTECH-MARKER", min_score_to_draft=60,
+        icp_description="ONLY-FINTECH-MARKER", company_description="We sell tools.",
+        min_score_to_draft=60,
     )
     agent.run("acme.com")
     assert "ONLY-FINTECH-MARKER" in captured["qualify_system"]
+
+
+def test_company_description_is_included_in_the_draft_prompt():
+    captured: dict = {}
+
+    class _CapturingLLM:
+        name = "capturing"
+
+        def __init__(self):
+            self._scripts = ['{"score": 90, "reasoning": "fits"}', '{"subject": "s", "body": "b"}']
+            self._i = 0
+
+        def complete(self, messages, *, model=None, temperature=0.7, max_tokens=None):
+            if self._i == 1:
+                captured["draft_system"] = messages[0].content
+            content = self._scripts[self._i]
+            self._i += 1
+            return LLMResponse(content=content, model="scripted", provider="scripted")
+
+    agent = LeadOrchestratorAgent(
+        _CapturingLLM(), _FakeResearchAgent(_brief()),
+        icp_description="B2B companies", company_description="ONLY-OFFERING-MARKER",
+        min_score_to_draft=60,
+    )
+    agent.run("acme.com")
+    assert "ONLY-OFFERING-MARKER" in captured["draft_system"]
 
 
 def test_build_lead_orchestrator_agent_from_settings():
@@ -93,9 +122,11 @@ def test_build_lead_orchestrator_agent_from_settings():
         openrouter_api_key="k",
         research_search_mode="mock",
         icp_description="Test ICP",
+        company_description="Test Offering",
         icp_min_score_to_draft=70,
     )
     agent = build_lead_orchestrator_agent(s)
     assert isinstance(agent, LeadOrchestratorAgent)
     assert agent._icp_description == "Test ICP"
+    assert agent._company_description == "Test Offering"
     assert agent._min_score_to_draft == 70

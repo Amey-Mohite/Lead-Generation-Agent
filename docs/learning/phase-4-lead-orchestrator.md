@@ -52,9 +52,10 @@ project (LLM provider, search mode, exporters).
                     │                            │
                     ▼                            ▼
         Lead(status="disqualified",   ┌──── draft (1 LLM call) ────┐
-             outreach=None)          │  system: "write a short,    │
-                                     │  personalized email"        │
-                                     │  user: brief + reasoning    │
+             outreach=None)          │  system: COMPANY_DESCRIPTION │
+                                     │  + "write a short,           │
+                                     │  personalized email"         │
+                                     │  user: brief + reasoning     │
                                      └──────────────┬───────────────┘
                                                     ▼
                                           OutreachDraft(subject, body)
@@ -122,6 +123,17 @@ repeated pattern** — instead of copy-pasting the retry loop twice more, one fu
   `ResearchAgent` (via Phase 3's own factory) plus a `FallbackLLM`-wrapped provider (Phase 2) for
   the qualify/draft calls. One function, fully config-driven, same pattern as
   `build_research_agent()`.
+
+> **Design refinement: `ICP_DESCRIPTION` alone wasn't enough to write a good outreach email.**
+> `ICP_DESCRIPTION` answers *"who is a good target?"* — but the draft step also needs to answer
+> *"what do we actually sell them?"*, and nothing captured that. Without it, `_draft()` could only
+> write a generic "noticed you're a company" email — it had no way to pitch anything concrete. The
+> fix: a second config field, **`COMPANY_DESCRIPTION`** — describing *our own* product/offering —
+> feeding **only** `_draft()`, not `_qualify()`. Qualification is about the *prospect's* fit against
+> a target profile (which `ICP_DESCRIPTION` can already encode, e.g. "companies relying on manual
+> processes who'd benefit from automation"); drafting needs the *seller's* actual value proposition
+> to reference something real (e.g. "~40% more loan approvals"). Two config values, two distinct
+> jobs — resist the urge to merge them just because they're both "about the business."
 
 ---
 

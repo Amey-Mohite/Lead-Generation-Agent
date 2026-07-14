@@ -1,8 +1,9 @@
 # 🤖 Autonomous Lead-Generation Agent
 
-Production-grade, multi-model AI agent that researches a company, qualifies it against
-an Ideal Customer Profile, and drafts personalized outreach — exposed as an API, with
-n8n human-approval sending and a React dashboard.
+Production-grade, multi-model AI agent that turns a broad query (e.g. "credit unions in the
+UK") into real candidate companies, researches each one, qualifies it against an Ideal
+Customer Profile, and drafts personalized outreach — exposed as an API, with n8n
+human-approval sending and a React dashboard.
 
 > Portfolio project demonstrating: multi-agent design · tool-calling · multi-provider
 > LLM routing (OpenRouter / NVIDIA / OpenAI / Anthropic, swap via ENV) · Postgres
@@ -10,13 +11,21 @@ n8n human-approval sending and a React dashboard.
 
 ## Status
 
-Built in phases (see `docs/superpowers/plans/`). **Current: Phase 4 — Lead Orchestrator Agent** ✅
+Built in phases (see `docs/superpowers/plans/`). **Current: Phase 5 — Discovery / LeadSource Layer** ✅
 
 - [x] Phase 1 — Foundations: config, FastAPI, Postgres, health/ready, Docker
 - [x] Phase 2 — Multi-provider LLM layer (OpenRouter/NVIDIA/OpenAI/Anthropic + fallback)
 - [x] Phase 3 — Research sub-agent + tools (ReAct loop, web_search/fetch_url, ResearchBrief)
 - [x] Phase 4 — Orchestrator agent (qualify + draft) — config-driven ICP, conditional drafting
-- [ ] Phases 5–12 — persistence, API, exporters, dashboard, observability, n8n, deploy
+- [x] Phase 5 — Discovery/LeadSource layer (broad-query enumeration → many candidates → batch of Leads)
+- [ ] Phase 6 — Exporters (Excel first, via a pluggable `Exporter` protocol; Slack/Email/Gmail later)
+- [ ] Phase 7 — Persistence (Postgres storage of Leads, agent runs, request logs)
+- [ ] Phase 8 — API layer (FastAPI endpoints exposing the pipeline as a real service)
+- [ ] Phase 9 — Dashboard (React UI)
+- [ ] Phase 10 — Observability (Langfuse tracing, Prometheus metrics)
+- [ ] Phase 11 — n8n integration (ingestion, human-approval sending, alerting)
+- [ ] Phase 12 — Deploy (docker-compose → minikube / Kubernetes)
+- [ ] Phase 13 — Quality + polish (tests, eval harness, CI, demo GIF, README polish)
 
 ## Documentation
 
@@ -25,6 +34,7 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 4 — Lead Orc
   - [Phase 2 — Multi-Provider LLM Layer](docs/learning/phase-2-llm-provider-layer.md)
   - [Phase 3 — Research Sub-Agent](docs/learning/phase-3-research-sub-agent.md)
   - [Phase 4 — Lead Orchestrator Agent](docs/learning/phase-4-lead-orchestrator.md)
+  - [Phase 5 — Discovery / LeadSource Layer](docs/learning/phase-5-discovery.md)
   - [Cookbook: How to Add a New Tool](docs/learning/how-to-add-a-tool.md)
 - **Design spec** (system-level decisions) — `docs/superpowers/specs/2026-07-07-lead-generation-agent-design.md`
 - **Build plans** (step-by-step) — `docs/superpowers/plans/`
