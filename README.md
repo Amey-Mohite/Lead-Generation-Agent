@@ -10,12 +10,12 @@ n8n human-approval sending and a React dashboard.
 
 ## Status
 
-Built in phases (see `docs/superpowers/plans/`). **Current: Phase 1 — Foundations** ✅
+Built in phases (see `docs/superpowers/plans/`). **Current: Phase 4 — Lead Orchestrator Agent** ✅
 
 - [x] Phase 1 — Foundations: config, FastAPI, Postgres, health/ready, Docker
 - [x] Phase 2 — Multi-provider LLM layer (OpenRouter/NVIDIA/OpenAI/Anthropic + fallback)
 - [x] Phase 3 — Research sub-agent + tools (ReAct loop, web_search/fetch_url, ResearchBrief)
-- [ ] Phase 4 — Orchestrator agent (qualify + draft)
+- [x] Phase 4 — Orchestrator agent (qualify + draft) — config-driven ICP, conditional drafting
 - [ ] Phases 5–12 — persistence, API, exporters, dashboard, observability, n8n, deploy
 
 ## Documentation
@@ -23,6 +23,9 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 1 — Foundati
 - **📚 Learning guides** (understand the flow, the why/how) — [`docs/learning/`](docs/learning/README.md)
   - [Phase 1 — Foundations](docs/learning/phase-1-foundations.md)
   - [Phase 2 — Multi-Provider LLM Layer](docs/learning/phase-2-llm-provider-layer.md)
+  - [Phase 3 — Research Sub-Agent](docs/learning/phase-3-research-sub-agent.md)
+  - [Phase 4 — Lead Orchestrator Agent](docs/learning/phase-4-lead-orchestrator.md)
+  - [Cookbook: How to Add a New Tool](docs/learning/how-to-add-a-tool.md)
 - **Design spec** (system-level decisions) — `docs/superpowers/specs/2026-07-07-lead-generation-agent-design.md`
 - **Build plans** (step-by-step) — `docs/superpowers/plans/`
 
