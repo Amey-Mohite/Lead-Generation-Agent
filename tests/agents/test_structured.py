@@ -50,3 +50,9 @@ def test_raises_after_max_retries():
     llm = _ScriptedLLM(["nope", "still nope", "nope again"])
     with pytest.raises(StructuredOutputError):
         complete_structured(llm, _msgs(), _Widget, max_retries=3)
+
+
+def test_raised_error_includes_the_last_raw_response_for_debugging():
+    llm = _ScriptedLLM(["nope", "still nope", "not json at all, no braces here"])
+    with pytest.raises(StructuredOutputError, match="not json at all"):
+        complete_structured(llm, _msgs(), _Widget, max_retries=3)

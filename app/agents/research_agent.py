@@ -25,6 +25,10 @@ On EACH turn respond with ONE JSON object and nothing else, in one of two forms:
 Rules:
 - Only ONE action per turn. Base every fact on tool observations; do not invent.
 - "company_name" and "summary" are required in the final brief.
+- "domain" must be a bare hostname only (e.g. "acme.com"), never a sentence, explanation, or
+  markdown link. If the target's domain doesn't resolve but you find the company's real domain
+  during research, use that real bare hostname instead. If no working domain can be confirmed,
+  omit "domain" entirely rather than describing the situation in prose.
 - Finish within {max_steps} steps."""
 
 

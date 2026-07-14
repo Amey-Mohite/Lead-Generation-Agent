@@ -29,3 +29,26 @@ def test_full_brief_with_contacts():
 def test_summary_required():
     with pytest.raises(ValidationError):
         ResearchBrief(company_name="Acme")
+
+
+def test_domain_rejects_a_prose_sentence_instead_of_a_hostname():
+    with pytest.raises(ValidationError):
+        ResearchBrief(
+            company_name="Acme",
+            summary="A widgets company.",
+            domain="The queried domain acme.co does not resolve; the real site is acme.com.",
+        )
+
+
+def test_domain_rejects_a_markdown_link():
+    with pytest.raises(ValidationError):
+        ResearchBrief(
+            company_name="Acme",
+            summary="A widgets company.",
+            domain="[acme.com](https://acme.com)",
+        )
+
+
+def test_domain_accepts_a_bare_hostname_with_subdomain():
+    b = ResearchBrief(company_name="Acme", summary="A widgets company.", domain="www.acme.co.uk")
+    assert b.domain == "www.acme.co.uk"

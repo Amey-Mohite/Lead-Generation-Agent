@@ -31,8 +31,21 @@ Rules:
 - Return at most {max_results} candidates; fewer is fine if that is all you can verify."""
 
 
+def _with_exclusions(system_prompt: str, exclude_domains: list[str] | None) -> str:
+    if not exclude_domains:
+        return system_prompt
+    excluded = "\n".join(f"- {domain}" for domain in exclude_domains)
+    return (
+        f"{system_prompt}\n\n"
+        "Do NOT include any of these companies -- they have already been found and processed; "
+        f"find different ones instead:\n{excluded}"
+    )
+
+
 class LeadSource(Protocol):
-    def discover(self, query: str, max_results: int) -> list[Candidate]: ...
+    def discover(
+        self, query: str, max_results: int, exclude_domains: list[str] | None = None
+    ) -> list[Candidate]: ...
 
 
 class WebSearchSource:
@@ -43,16 +56,17 @@ class WebSearchSource:
         self._search_backend = search_backend
         self._llm = llm
 
-    def discover(self, query: str, max_results: int) -> list[Candidate]:
+    def discover(
+        self, query: str, max_results: int, exclude_domains: list[str] | None = None
+    ) -> list[Candidate]:
         raw_results = self._search_backend.search(query, k=max_results * 3)
         formatted = "\n".join(
             f"{i + 1}. {r.title}\n   {r.url}\n   {r.snippet}"
             for i, r in enumerate(raw_results)
         )
+        system = _with_exclusions(_EXTRACT_SYSTEM.format(max_results=max_results), exclude_domains)
         messages = [
-            ChatMessage(
-                role="system", content=_EXTRACT_SYSTEM.format(max_results=max_results)
-            ),
+            ChatMessage(role="system", content=system),
             ChatMessage(
                 role="user", content=f"Query: {query}\n\nSearch results:\n{formatted}"
             ),
@@ -69,12 +83,14 @@ class NativeSearchSource:
     def __init__(self, llm: LLMProvider) -> None:
         self._llm = llm
 
-    def discover(self, query: str, max_results: int) -> list[Candidate]:
+    def discover(
+        self, query: str, max_results: int, exclude_domains: list[str] | None = None
+    ) -> list[Candidate]:
+        system = _with_exclusions(
+            _NATIVE_DISCOVER_SYSTEM.format(max_results=max_results), exclude_domains
+        )
         messages = [
-            ChatMessage(
-                role="system",
-                content=_NATIVE_DISCOVER_SYSTEM.format(max_results=max_results),
-            ),
+            ChatMessage(role="system", content=system),
             ChatMessage(role="user", content=f"Query: {query}"),
         ]
         result = complete_structured(self._llm, messages, CandidateList)

@@ -17,8 +17,10 @@ class _ScriptedLLM:
     def __init__(self, scripts: list[str]):
         self._scripts = scripts
         self.calls = 0
+        self.messages_seen: list = []
 
     def complete(self, messages, *, model=None, temperature=0.7, max_tokens=None):
+        self.messages_seen.append(messages)
         content = self._scripts[self.calls]
         self.calls += 1
         return LLMResponse(content=content, model="scripted", provider="scripted")
@@ -76,6 +78,40 @@ def test_native_search_source_makes_one_structured_call_no_search_backend():
     assert len(candidates) == 1
     assert candidates[0].name == "Acme Credit Union"
     assert llm.calls == 1
+
+
+def test_native_search_source_tells_the_model_what_to_exclude():
+    scripts = ['{"candidates": [{"name": "Beta Credit Union", "domain": "beta-cu.com"}]}']
+    llm = _ScriptedLLM(scripts)
+    source = NativeSearchSource(llm)
+
+    source.discover("credit unions in the UK", max_results=5, exclude_domains=["acme-cu.com"])
+
+    system_prompt = llm.messages_seen[0][0].content
+    assert "acme-cu.com" in system_prompt
+    assert "already been found" in system_prompt
+
+
+def test_web_search_source_tells_the_model_what_to_exclude():
+    scripts = ['{"candidates": [{"name": "Beta Credit Union", "domain": "beta-cu.com"}]}']
+    llm = _ScriptedLLM(scripts)
+    source = WebSearchSource(_FakeSearchBackend(_raw_results()), llm)
+
+    source.discover("credit unions", max_results=5, exclude_domains=["acme-cu.com"])
+
+    system_prompt = llm.messages_seen[0][0].content
+    assert "acme-cu.com" in system_prompt
+
+
+def test_discover_without_excludes_omits_the_exclusion_clause():
+    scripts = ['{"candidates": [{"name": "Acme Credit Union", "domain": "acme-cu.com"}]}']
+    llm = _ScriptedLLM(scripts)
+    source = NativeSearchSource(llm)
+
+    source.discover("credit unions in the UK", max_results=5)
+
+    system_prompt = llm.messages_seen[0][0].content
+    assert "already been found" not in system_prompt
 
 
 def test_build_lead_source_native_mode_returns_native_search_source():

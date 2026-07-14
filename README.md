@@ -11,7 +11,7 @@ human-approval sending and a React dashboard.
 
 ## Status
 
-Built in phases (see `docs/superpowers/plans/`). **Current: Phase 6 — Excel Export** ✅
+Built in phases (see `docs/superpowers/plans/`). **Current: Phase 7 — Persistence** ✅
 
 - [x] Phase 1 — Foundations: config, FastAPI, Postgres, health/ready, Docker
 - [x] Phase 2 — Multi-provider LLM layer (OpenRouter/NVIDIA/OpenAI/Anthropic + fallback)
@@ -19,7 +19,7 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 6 — Excel Ex
 - [x] Phase 4 — Orchestrator agent (qualify + draft) — config-driven ICP, conditional drafting
 - [x] Phase 5 — Discovery/LeadSource layer (broad-query enumeration → many candidates → batch of Leads)
 - [x] Phase 6 — Exporters (Excel first, via a pluggable `Exporter` protocol; Slack/Email/Gmail later)
-- [ ] Phase 7 — Persistence (Postgres storage of Leads, agent runs, request logs)
+- [x] Phase 7 — Persistence (Postgres `leads` table via Alembic; permanent domain dedup for Discovery)
 - [ ] Phase 8 — API layer (FastAPI endpoints exposing the pipeline as a real service)
 - [ ] Phase 9 — Dashboard (React UI)
 - [ ] Phase 10 — Observability (Langfuse tracing, Prometheus metrics)
@@ -36,6 +36,7 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 6 — Excel Ex
   - [Phase 4 — Lead Orchestrator Agent](docs/learning/phase-4-lead-orchestrator.md)
   - [Phase 5 — Discovery / LeadSource Layer](docs/learning/phase-5-discovery.md)
   - [Phase 6 — Excel Export](docs/learning/phase-6-excel-export.md)
+  - [Phase 7 — Persistence](docs/learning/phase-7-persistence.md)
   - [Cookbook: How to Add a New Tool](docs/learning/how-to-add-a-tool.md)
 - **Design spec** (system-level decisions) — `docs/superpowers/specs/2026-07-07-lead-generation-agent-design.md`
 - **Build plans** (step-by-step) — `docs/superpowers/plans/`

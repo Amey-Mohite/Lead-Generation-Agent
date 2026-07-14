@@ -4,11 +4,14 @@ Usage:
     ./.venv/Scripts/python.exe scripts/try_discovery.py ["credit unions in the UK"] [--demo]
 
 Behaviour:
-- If an API key for the configured LLM_PROVIDER is present, does a REAL run: real discovery
-  (respecting RESEARCH_SEARCH_MODE + DISCOVERY_MAX_RESULTS), then real research/qualify/draft for
-  every discovered candidate.
-- If no key is found (or --demo is passed), runs an OFFLINE scripted demo (no network, no keys)
-  with two canned candidates.
+- If an explicit query is given, runs that single query (respecting RESEARCH_SEARCH_MODE +
+  DISCOVERY_MAX_RESULTS), then real research/qualify/draft for every discovered candidate.
+- If no query is given and DISCOVERY_QUERIES is set (comma list), sweeps through every one of
+  those queries in a single run, sharing one repository so a domain found by an earlier query is
+  excluded from every later query too.
+- If no query is given and DISCOVERY_QUERIES is unset, falls back to a single default query.
+- If no API key is found (or --demo is passed), runs an OFFLINE scripted demo (no network, no
+  keys) with two canned candidates.
 """
 
 import sys
@@ -27,7 +30,9 @@ _KEY_ATTR = {
 
 
 class _ScriptedLeadSource:
-    def discover(self, query: str, max_results: int) -> list[Candidate]:
+    def discover(
+        self, query: str, max_results: int, exclude_domains: list[str] | None = None
+    ) -> list[Candidate]:
         demo = [
             Candidate(name="Acme Credit Union", domain="acme-cu-demo.example"),
             Candidate(name="Beta Credit Union", domain="beta-cu-demo.example"),
@@ -55,25 +60,42 @@ class _ScriptedOrchestrator:
 
 
 def main() -> None:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
     args = [a for a in sys.argv[1:] if a != "--demo"]
     force_demo = "--demo" in sys.argv
-    query = args[0] if args else "credit unions in the UK"
+    explicit_query = args[0] if args else None
 
     settings = get_settings()
     key_attr = _KEY_ATTR.get(settings.llm_provider)
     has_key = bool(getattr(settings, key_attr, None)) if key_attr else False
 
     if has_key and not force_demo:
-        from app.agents.discovery_pipeline import run_discovery_pipeline
-
-        print(
-            f"[REAL run] provider={settings.llm_provider} model={settings.llm_model} "
-            f"search_mode={settings.research_search_mode} query={query!r} "
-            f"max_results={settings.discovery_max_results}"
+        from app.agents.discovery_pipeline import (
+            parse_discovery_queries,
+            run_discovery_pipeline,
+            run_discovery_sweep,
         )
+
         print(f"ICP: {settings.icp_description}")
-        leads = run_discovery_pipeline(settings, query)
+
+        if explicit_query is None and parse_discovery_queries(settings.discovery_queries):
+            queries = parse_discovery_queries(settings.discovery_queries)
+            print(
+                f"[REAL sweep] provider={settings.llm_provider} model={settings.llm_model} "
+                f"search_mode={settings.research_search_mode} queries={queries!r} "
+                f"max_results={settings.discovery_max_results}"
+            )
+            leads = run_discovery_sweep(settings)
+        else:
+            query = explicit_query or "credit unions in the UK"
+            print(
+                f"[REAL run] provider={settings.llm_provider} model={settings.llm_model} "
+                f"search_mode={settings.research_search_mode} query={query!r} "
+                f"max_results={settings.discovery_max_results}"
+            )
+            leads = run_discovery_pipeline(settings, query)
     else:
+        query = explicit_query or "credit unions in the UK"
         why = "forced --demo" if force_demo else f"no API key for '{settings.llm_provider}'"
         print(
             f"[OFFLINE demo] ({why}) query={query!r}\n"
