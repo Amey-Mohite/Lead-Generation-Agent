@@ -12,6 +12,7 @@ Read these if you want to *understand* the code, not just run it.
 | [Phase 3 — Research Sub-Agent](phase-3-research-sub-agent.md) | The first real agent: the ReAct tool-calling loop, tools, search backends, structured output, bounded autonomy — plus an FAQ deep-dive from debugging real runs (message roles, why one action per turn, native vs. api trust trade-offs, how tracing/decorators work). |
 | [Phase 4 — Lead Orchestrator Agent](phase-4-lead-orchestrator.md) | The "judgment" layer: qualifying a researched company against a config-driven ICP (score + reasoning), then conditionally drafting personalized outreach. Introduces `complete_structured()`, a reusable generalization of Phase 3's self-correcting JSON parsing. |
 | [Phase 5 — Discovery / LeadSource Layer](phase-5-discovery.md) | Closes the "you must already know the company" gap: a broad query becomes many real candidate companies via one structured extraction call, fanned out sequentially through the existing research → qualify → draft pipeline. |
+| [Phase 6 — Excel Export](phase-6-excel-export.md) | The first durable output: `list[Lead]` becomes a real, shareable `.xlsx` file via a pluggable `Exporter` protocol — one row per lead, multi-value fields joined into a cell, disqualified leads included for audit visibility. |
 
 ## Cookbooks (practical how-tos, not tied to one phase)
 

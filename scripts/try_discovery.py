@@ -90,6 +90,12 @@ def main() -> None:
         print(f"\n--- Lead {i}: {lead.research.company_name} ---")
         print(lead.model_dump_json(indent=2))
 
+    from app.exporters.factory import build_exporters
+
+    for exporter in build_exporters(settings):
+        path = exporter.export(leads)
+        print(f"\nExported {len(leads)} lead(s) to: {path}")
+
 
 if __name__ == "__main__":
     main()
