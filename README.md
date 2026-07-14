@@ -11,14 +11,14 @@ human-approval sending and a React dashboard.
 
 ## Status
 
-Built in phases (see `docs/superpowers/plans/`). **Current: Phase 5 — Discovery / LeadSource Layer** ✅
+Built in phases (see `docs/superpowers/plans/`). **Current: Phase 6 — Excel Export** ✅
 
 - [x] Phase 1 — Foundations: config, FastAPI, Postgres, health/ready, Docker
 - [x] Phase 2 — Multi-provider LLM layer (OpenRouter/NVIDIA/OpenAI/Anthropic + fallback)
 - [x] Phase 3 — Research sub-agent + tools (ReAct loop, web_search/fetch_url, ResearchBrief)
 - [x] Phase 4 — Orchestrator agent (qualify + draft) — config-driven ICP, conditional drafting
 - [x] Phase 5 — Discovery/LeadSource layer (broad-query enumeration → many candidates → batch of Leads)
-- [ ] Phase 6 — Exporters (Excel first, via a pluggable `Exporter` protocol; Slack/Email/Gmail later)
+- [x] Phase 6 — Exporters (Excel first, via a pluggable `Exporter` protocol; Slack/Email/Gmail later)
 - [ ] Phase 7 — Persistence (Postgres storage of Leads, agent runs, request logs)
 - [ ] Phase 8 — API layer (FastAPI endpoints exposing the pipeline as a real service)
 - [ ] Phase 9 — Dashboard (React UI)
@@ -35,6 +35,7 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 5 — Discover
   - [Phase 3 — Research Sub-Agent](docs/learning/phase-3-research-sub-agent.md)
   - [Phase 4 — Lead Orchestrator Agent](docs/learning/phase-4-lead-orchestrator.md)
   - [Phase 5 — Discovery / LeadSource Layer](docs/learning/phase-5-discovery.md)
+  - [Phase 6 — Excel Export](docs/learning/phase-6-excel-export.md)
   - [Cookbook: How to Add a New Tool](docs/learning/how-to-add-a-tool.md)
 - **Design spec** (system-level decisions) — `docs/superpowers/specs/2026-07-07-lead-generation-agent-design.md`
 - **Build plans** (step-by-step) — `docs/superpowers/plans/`

@@ -98,6 +98,12 @@ def main() -> None:
     print("\n================ LEAD ================")
     print(lead.model_dump_json(indent=2))
 
+    from app.exporters.factory import build_exporters
+
+    for exporter in build_exporters(settings):
+        path = exporter.export([lead])
+        print(f"\nExported to: {path}")
+
 
 if __name__ == "__main__":
     main()
