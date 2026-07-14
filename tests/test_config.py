@@ -21,3 +21,17 @@ def test_env_override(monkeypatch):
 def test_get_settings_is_cached():
     get_settings.cache_clear()
     assert get_settings() is get_settings()
+
+
+def test_icp_defaults():
+    s = Settings(_env_file=None)
+    assert "B2B" in s.icp_description or len(s.icp_description) > 0
+    assert s.icp_min_score_to_draft == 60
+
+
+def test_icp_env_override(monkeypatch):
+    monkeypatch.setenv("ICP_DESCRIPTION", "Only fintech startups under 50 employees.")
+    monkeypatch.setenv("ICP_MIN_SCORE_TO_DRAFT", "80")
+    s = Settings(_env_file=None)
+    assert s.icp_description == "Only fintech startups under 50 employees."
+    assert s.icp_min_score_to_draft == 80

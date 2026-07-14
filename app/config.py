@@ -27,6 +27,13 @@ class Settings(BaseSettings):
     search_provider: str = "tavily"           # tavily|serpapi|brave
     search_api_key: str | None = None
 
+    # Lead qualification (ICP = Ideal Customer Profile)
+    icp_description: str = (
+        "A B2B software or technology company with 10-500 employees, "
+        "based in North America or Europe."
+    )
+    icp_min_score_to_draft: int = 60
+
     # Outputs
     exporters: str = "excel"                  # comma list: excel,slack,email,gmail
     export_dir: str = "./out/leads"

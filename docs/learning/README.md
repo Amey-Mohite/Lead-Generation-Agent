@@ -10,6 +10,7 @@ Read these if you want to *understand* the code, not just run it.
 | [Phase 1 — Foundations](phase-1-foundations.md) | Config, FastAPI app factory, health vs readiness, Postgres, Docker. The skeleton every request rides on. |
 | [Phase 2 — Multi-Provider LLM Layer](phase-2-llm-provider-layer.md) | The provider abstraction: how "swap models via ENV" actually works, adapters, factory, fallback. |
 | [Phase 3 — Research Sub-Agent](phase-3-research-sub-agent.md) | The first real agent: the ReAct tool-calling loop, tools, search backends, structured output, bounded autonomy — plus an FAQ deep-dive from debugging real runs (message roles, why one action per turn, native vs. api trust trade-offs, how tracing/decorators work). |
+| [Phase 4 — Lead Orchestrator Agent](phase-4-lead-orchestrator.md) | The "judgment" layer: qualifying a researched company against a config-driven ICP (score + reasoning), then conditionally drafting personalized outreach. Introduces `complete_structured()`, a reusable generalization of Phase 3's self-correcting JSON parsing. |
 
 ## Cookbooks (practical how-tos, not tied to one phase)
 
