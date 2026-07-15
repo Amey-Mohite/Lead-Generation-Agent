@@ -3,7 +3,7 @@
 Production-grade, multi-model AI agent that turns a broad query (e.g. "credit unions in the
 UK") into real candidate companies, researches each one, qualifies it against an Ideal
 Customer Profile, and drafts personalized outreach — exposed as an API, with n8n
-human-approval sending and a React dashboard.
+human-approval sending.
 
 > Portfolio project demonstrating: multi-agent design · tool-calling · multi-provider
 > LLM routing (OpenRouter / NVIDIA / OpenAI / Anthropic, swap via ENV) · Postgres
@@ -21,11 +21,10 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 8 — API laye
 - [x] Phase 6 — Exporters (Excel first, via a pluggable `Exporter` protocol; Slack/Email/Gmail later)
 - [x] Phase 7 — Persistence (Postgres `leads` table via Alembic; permanent domain dedup for Discovery)
 - [x] Phase 8 — API layer (background-job-plus-polling FastAPI endpoints; no-op-when-unset API key auth)
-- [ ] Phase 9 — Dashboard (React UI)
-- [ ] Phase 10 — Observability (Langfuse tracing, Prometheus metrics)
-- [ ] Phase 11 — n8n integration (ingestion, human-approval sending, alerting)
-- [ ] Phase 12 — Deploy (docker-compose → minikube / Kubernetes)
-- [ ] Phase 13 — Quality + polish (tests, eval harness, CI, demo GIF, README polish)
+- [ ] Phase 9 — Observability (Langfuse tracing, Prometheus metrics)
+- [ ] Phase 10 — n8n integration (ingestion, human-approval sending, alerting)
+- [ ] Phase 11 — Deploy (docker-compose → minikube / Kubernetes)
+- [ ] Phase 12 — Quality + polish (tests, eval harness, CI, demo GIF, README polish)
 
 ## Documentation
 

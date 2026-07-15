@@ -46,11 +46,10 @@ Phase 5  Discovery ........... a query becomes many candidates (the "initiative"
 Phase 6  Exporters ........... Excel first, pluggable (the "handoff")
 Phase 7  Persistence ......... Postgres `leads` table + permanent domain dedup (the "memory")
 Phase 8  API layer ........... FastAPI endpoints exposing the pipeline as a background-job service
-Phase 9  Dashboard ........... React UI
-Phase 10 Observability ....... Langfuse tracing, Prometheus metrics
-Phase 11 n8n .................. ingestion, human-approval sending, alerting
-Phase 12 Deploy ............... docker-compose -> minikube / Kubernetes
-Phase 13 Quality + polish ..... tests, eval harness, CI, demo GIF, README polish
+Phase 9  Observability ....... Langfuse tracing, Prometheus metrics
+Phase 10 n8n .................. ingestion, human-approval sending, alerting
+Phase 11 Deploy ............... docker-compose -> minikube / Kubernetes
+Phase 12 Quality + polish ..... tests, eval harness, CI, demo GIF, README polish
 ```
 
 Each phase is independently testable and builds on the ones before it. See the main
