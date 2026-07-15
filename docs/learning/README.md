@@ -14,6 +14,7 @@ Read these if you want to *understand* the code, not just run it.
 | [Phase 5 — Discovery / LeadSource Layer](phase-5-discovery.md) | Closes the "you must already know the company" gap: a broad query becomes many real candidate companies via one structured extraction call, fanned out sequentially through the existing research → qualify → draft pipeline. |
 | [Phase 6 — Excel Export](phase-6-excel-export.md) | The first durable output: `list[Lead]` becomes a real, shareable `.xlsx` file via a pluggable `Exporter` protocol — one row per lead, multi-value fields joined into a cell, disqualified leads included for audit visibility. |
 | [Phase 7 — Persistence](phase-7-persistence.md) | Durable memory across process runs: every `Lead` is upserted into a Postgres `leads` table by domain, and Discovery uses that same table to permanently skip domains it has already researched (configurable). |
+| [Phase 8 — API Layer](phase-8-api-layer.md) | The pipeline becomes a real HTTP service: background-job-plus-polling for slow discovery runs, an in-memory job store, no-op-when-unset API key auth, and read endpoints over the persisted `leads` table. |
 
 ## Cookbooks (practical how-tos, not tied to one phase)
 
@@ -44,7 +45,7 @@ Phase 4  Orchestrator ........ qualify + draft (the "judgment")
 Phase 5  Discovery ........... a query becomes many candidates (the "initiative")
 Phase 6  Exporters ........... Excel first, pluggable (the "handoff")
 Phase 7  Persistence ......... Postgres `leads` table + permanent domain dedup (the "memory")
-Phase 8  API layer ........... FastAPI endpoints exposing the pipeline as a service
+Phase 8  API layer ........... FastAPI endpoints exposing the pipeline as a background-job service
 Phase 9  Dashboard ........... React UI
 Phase 10 Observability ....... Langfuse tracing, Prometheus metrics
 Phase 11 n8n .................. ingestion, human-approval sending, alerting
