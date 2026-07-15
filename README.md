@@ -23,7 +23,7 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 8 — API laye
 - [x] Phase 8 — API layer (background-job-plus-polling FastAPI endpoints; no-op-when-unset API key auth)
 - [ ] Phase 9 — Observability (Langfuse tracing, Prometheus metrics)
 - [ ] Phase 10 — n8n integration (ingestion, human-approval sending, alerting)
-- [ ] Phase 11 — Deploy (docker-compose → minikube / Kubernetes)
+- [ ] Phase 11 — Deploy (docker-compose → minikube / Kubernetes; Supabase for managed production Postgres)
 - [ ] Phase 12 — Quality + polish (tests, eval harness, CI, demo GIF, README polish)
 
 ## Documentation
