@@ -1,6 +1,8 @@
 from datetime import datetime, timezone
+from functools import lru_cache
 
 from sqlalchemy import create_engine, select
+from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 
 from app.db.models import LeadRecord
@@ -55,7 +57,26 @@ class LeadRepository:
         with self._session_factory() as session:
             return list(session.scalars(select(LeadRecord.domain)))
 
+    def list_leads(
+        self, status: str | None = None, limit: int = 50, offset: int = 0
+    ) -> list[LeadRecord]:
+        with self._session_factory() as session:
+            stmt = select(LeadRecord).order_by(LeadRecord.last_seen_at.desc())
+            if status is not None:
+                stmt = stmt.where(LeadRecord.status == status)
+            stmt = stmt.offset(offset).limit(limit)
+            return list(session.scalars(stmt))
+
+    def get_by_domain(self, domain: str) -> LeadRecord | None:
+        with self._session_factory() as session:
+            return session.scalar(select(LeadRecord).where(LeadRecord.domain == domain))
+
+
+@lru_cache
+def _get_engine(database_url: str) -> Engine:
+    return create_engine(database_url, pool_pre_ping=True)
+
 
 def build_lead_repository(settings) -> LeadRepository:
-    engine = create_engine(settings.database_url, pool_pre_ping=True)
+    engine = _get_engine(settings.database_url)
     return LeadRepository(sessionmaker(bind=engine))

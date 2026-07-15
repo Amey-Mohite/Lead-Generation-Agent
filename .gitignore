@@ -6,3 +6,4 @@ venv/
 out/
 *.xlsx
 .DS_Store
+.superpowers/

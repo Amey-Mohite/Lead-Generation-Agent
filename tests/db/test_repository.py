@@ -1,8 +1,11 @@
+from datetime import datetime, timedelta, timezone
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
+from app.config import Settings
 from app.db.models import Base, LeadRecord
-from app.db.repository import LeadRepository
+from app.db.repository import LeadRepository, _get_engine, build_lead_repository
 from app.schemas.discovery import Candidate
 from app.schemas.lead import Lead, OutreachDraft, Qualification
 from app.schemas.research import Contact, ResearchBrief
@@ -29,6 +32,20 @@ def _lead(domain: str, company_name: str = "Acme") -> Lead:
         outreach=OutreachDraft(subject="Hi", body="Hello there"),
         status="qualified",
     )
+
+
+def _insert_record(session_factory, domain: str, company_name: str = "Acme",
+                    status: str = "qualified", last_seen_at=None) -> None:
+    now = last_seen_at or datetime.now(timezone.utc)
+    with session_factory() as session:
+        session.add(
+            LeadRecord(
+                domain=domain, company_name=company_name, status=status, score=80,
+                reasoning="ok", summary="s", key_facts=[], contacts=[], sources=[],
+                first_seen_at=now, last_seen_at=now,
+            )
+        )
+        session.commit()
 
 
 def test_save_creates_a_new_row():
@@ -113,3 +130,75 @@ def test_all_domains_returns_every_saved_domain():
 def test_all_domains_empty_when_nothing_saved():
     repo, _ = _repository()
     assert repo.all_domains() == []
+
+
+def test_list_leads_returns_all_by_default_most_recent_first():
+    repo, session_factory = _repository()
+    base = datetime.now(timezone.utc)
+    _insert_record(session_factory, "acme.com", last_seen_at=base)
+    _insert_record(session_factory, "beta.com", company_name="Beta", last_seen_at=base + timedelta(seconds=10))
+
+    results = repo.list_leads()
+
+    assert [r.domain for r in results] == ["beta.com", "acme.com"]
+
+
+def test_list_leads_filters_by_status():
+    repo, session_factory = _repository()
+    base = datetime.now(timezone.utc)
+    _insert_record(session_factory, "acme.com", status="disqualified", last_seen_at=base)
+    _insert_record(session_factory, "beta.com", company_name="Beta", status="qualified", last_seen_at=base + timedelta(seconds=10))
+
+    qualified = repo.list_leads(status="qualified")
+    disqualified = repo.list_leads(status="disqualified")
+
+    assert [r.domain for r in qualified] == ["beta.com"]
+    assert [r.domain for r in disqualified] == ["acme.com"]
+
+
+def test_list_leads_respects_limit_and_offset():
+    repo, session_factory = _repository()
+    base = datetime.now(timezone.utc)
+    _insert_record(session_factory, "acme.com", last_seen_at=base)
+    _insert_record(session_factory, "beta.com", company_name="Beta", last_seen_at=base + timedelta(seconds=10))
+    _insert_record(session_factory, "gamma.com", company_name="Gamma", last_seen_at=base + timedelta(seconds=20))
+
+    page = repo.list_leads(limit=1, offset=1)
+
+    assert [r.domain for r in page] == ["beta.com"]
+
+
+def test_get_by_domain_returns_the_matching_record():
+    repo, session_factory = _repository()
+    _insert_record(session_factory, "acme.com", company_name="Acme")
+
+    record = repo.get_by_domain("acme.com")
+
+    assert record is not None
+    assert record.company_name == "Acme"
+
+
+def test_get_by_domain_returns_none_when_not_found():
+    repo, _ = _repository()
+    assert repo.get_by_domain("nonexistent.com") is None
+
+
+def test_build_lead_repository_reuses_one_engine_per_database_url():
+    _get_engine.cache_clear()
+    settings = Settings(_env_file=None, database_url="sqlite:///:memory:")
+
+    build_lead_repository(settings)
+    build_lead_repository(settings)
+
+    assert _get_engine.cache_info().hits == 1
+
+
+def test_build_lead_repository_uses_a_different_engine_for_a_different_url():
+    _get_engine.cache_clear()
+
+    build_lead_repository(Settings(_env_file=None, database_url="sqlite:///:memory:"))
+    engine_a = _get_engine("sqlite:///:memory:")
+    build_lead_repository(Settings(_env_file=None, database_url="sqlite:///other.db"))
+    engine_b = _get_engine("sqlite:///other.db")
+
+    assert engine_a is not engine_b

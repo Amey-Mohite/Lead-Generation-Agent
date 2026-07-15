@@ -11,7 +11,7 @@ human-approval sending and a React dashboard.
 
 ## Status
 
-Built in phases (see `docs/superpowers/plans/`). **Current: Phase 7 — Persistence** ✅
+Built in phases (see `docs/superpowers/plans/`). **Current: Phase 8 — API layer** ✅
 
 - [x] Phase 1 — Foundations: config, FastAPI, Postgres, health/ready, Docker
 - [x] Phase 2 — Multi-provider LLM layer (OpenRouter/NVIDIA/OpenAI/Anthropic + fallback)
@@ -20,7 +20,7 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 7 — Persiste
 - [x] Phase 5 — Discovery/LeadSource layer (broad-query enumeration → many candidates → batch of Leads)
 - [x] Phase 6 — Exporters (Excel first, via a pluggable `Exporter` protocol; Slack/Email/Gmail later)
 - [x] Phase 7 — Persistence (Postgres `leads` table via Alembic; permanent domain dedup for Discovery)
-- [ ] Phase 8 — API layer (FastAPI endpoints exposing the pipeline as a real service)
+- [x] Phase 8 — API layer (background-job-plus-polling FastAPI endpoints; no-op-when-unset API key auth)
 - [ ] Phase 9 — Dashboard (React UI)
 - [ ] Phase 10 — Observability (Langfuse tracing, Prometheus metrics)
 - [ ] Phase 11 — n8n integration (ingestion, human-approval sending, alerting)
@@ -37,6 +37,7 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 7 — Persiste
   - [Phase 5 — Discovery / LeadSource Layer](docs/learning/phase-5-discovery.md)
   - [Phase 6 — Excel Export](docs/learning/phase-6-excel-export.md)
   - [Phase 7 — Persistence](docs/learning/phase-7-persistence.md)
+  - [Phase 8 — API Layer](docs/learning/phase-8-api-layer.md)
   - [Cookbook: How to Add a New Tool](docs/learning/how-to-add-a-tool.md)
 - **Design spec** (system-level decisions) — `docs/superpowers/specs/2026-07-07-lead-generation-agent-design.md`
 - **Build plans** (step-by-step) — `docs/superpowers/plans/`
