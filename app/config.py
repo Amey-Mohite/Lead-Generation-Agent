@@ -62,7 +62,7 @@ class Settings(BaseSettings):
     gmail_credentials: str | None = None
 
     # Observability
-    langfuse_enabled: bool = False
+    langfuse_enabled: bool = True
     langfuse_public_key: str | None = None
     langfuse_secret_key: str | None = None
     langfuse_host: str | None = None

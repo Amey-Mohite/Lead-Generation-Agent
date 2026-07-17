@@ -4,9 +4,6 @@ from app.providers.llm.base import LLMProvider
 from app.providers.llm.openai_compatible import OpenAICompatibleProvider
 import logging
 
-logging.basicConfig(level=logging.INFO)
-
-
 _OPENAI_COMPATIBLE = {
     "openrouter": ("https://openrouter.ai/api/v1", "openrouter_api_key"),
     "nvidia": ("https://integrate.api.nvidia.com/v1", "nvidia_api_key"),
@@ -25,6 +22,7 @@ def build_llm_provider(settings: Settings) -> LLMProvider:
             default_model=settings.llm_model,
             base_url=base_url,
             api_key=getattr(settings, key_attr),
+            langfuse_enabled=settings.langfuse_enabled,
         )
 
     if provider == "anthropic":

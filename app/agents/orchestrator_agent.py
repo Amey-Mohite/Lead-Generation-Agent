@@ -1,4 +1,5 @@
 from app.agents.structured import complete_structured
+from app.observability.tracing import traced_span
 from app.providers.llm.base import ChatMessage, LLMProvider
 from app.schemas.lead import Lead, OutreachDraft, Qualification
 from app.schemas.research import ResearchBrief
@@ -49,26 +50,34 @@ class LeadOrchestratorAgent:
         icp_description: str,
         company_description: str,
         min_score_to_draft: int = 60,
+        langfuse_client=None,
     ) -> None:
         self._llm = llm
         self._research_agent = research_agent
         self._icp_description = icp_description
         self._company_description = company_description
         self._min_score_to_draft = min_score_to_draft
+        self._langfuse_client = langfuse_client
 
     def run(self, target: str) -> Lead:
-        brief = self._research_agent.run(target)
-        qualification = self._qualify(brief)
+        with traced_span(self._langfuse_client, "lead-orchestrator-run"):
+            with traced_span(self._langfuse_client, "research"):
+                brief = self._research_agent.run(target)
+            with traced_span(self._langfuse_client, "qualify"):
+                qualification = self._qualify(brief)
 
-        if qualification.score < self._min_score_to_draft:
+            if qualification.score < self._min_score_to_draft:
+                return Lead(
+                    research=brief, qualification=qualification, outreach=None,
+                    status="disqualified",
+                )
+
+            with traced_span(self._langfuse_client, "draft"):
+                outreach = self._draft(brief, qualification)
             return Lead(
-                research=brief, qualification=qualification, outreach=None, status="disqualified"
+                research=brief, qualification=qualification, outreach=outreach,
+                status="qualified",
             )
-
-        outreach = self._draft(brief, qualification)
-        return Lead(
-            research=brief, qualification=qualification, outreach=outreach, status="qualified"
-        )
 
     def _qualify(self, brief: ResearchBrief) -> Qualification:
         messages = [
@@ -107,6 +116,7 @@ def build_lead_orchestrator_agent(settings) -> "LeadOrchestratorAgent":
     from app.agents.research_agent import build_research_agent
     from app.providers.llm.factory import build_llm_provider
     from app.providers.llm.fallback import FallbackLLM
+    from app.observability.tracing import get_langfuse_client
 
     research_agent = build_research_agent(settings)
     llm = FallbackLLM(build_llm_provider(settings), settings.llm_fallback_model)
@@ -116,4 +126,5 @@ def build_lead_orchestrator_agent(settings) -> "LeadOrchestratorAgent":
         icp_description=settings.icp_description,
         company_description=settings.company_description,
         min_score_to_draft=settings.icp_min_score_to_draft,
+        langfuse_client=get_langfuse_client(settings),
     )

@@ -5,6 +5,8 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
+from app.observability.metrics import record_job_outcome
+
 
 class Job(BaseModel):
     job_id: str
@@ -38,12 +40,14 @@ class JobStore:
         job.status = "done"
         job.result = result
         job.finished_at = datetime.now(timezone.utc)
+        record_job_outcome(kind=job.kind, status="done")
 
     def mark_failed(self, job_id: str, error: str) -> None:
         job = self._jobs[job_id]
         job.status = "failed"
         job.error = error
         job.finished_at = datetime.now(timezone.utc)
+        record_job_outcome(kind=job.kind, status="failed")
 
     def get(self, job_id: str) -> Job | None:
         return self._jobs.get(job_id)

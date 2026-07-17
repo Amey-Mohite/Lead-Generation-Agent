@@ -1,9 +1,11 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
 from fastapi.responses import JSONResponse
+from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 from sqlalchemy import text
 
 from app.config import Settings, get_settings
 from app.db.session import get_engine
+from app.observability.metrics import registry
 
 router = APIRouter(tags=["health"])
 
@@ -24,3 +26,8 @@ def ready() -> JSONResponse:
             status_code=503, content={"status": "not_ready", "database": "down"}
         )
     return JSONResponse(status_code=200, content={"status": "ready", "database": "up"})
+
+
+@router.get("/metrics")
+def metrics() -> Response:
+    return Response(content=generate_latest(registry), media_type=CONTENT_TYPE_LATEST)
