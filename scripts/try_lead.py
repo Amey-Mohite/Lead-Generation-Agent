@@ -66,6 +66,9 @@ def main() -> None:
     target = args[0] if args else "stripe.com"
 
     settings = get_settings()
+    from app.observability.setup import setup_observability
+
+    setup_observability(settings)
     key_attr = _KEY_ATTR.get(settings.llm_provider)
     has_key = bool(getattr(settings, key_attr, None)) if key_attr else False
 

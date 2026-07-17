@@ -15,6 +15,7 @@ Read these if you want to *understand* the code, not just run it.
 | [Phase 6 — Excel Export](phase-6-excel-export.md) | The first durable output: `list[Lead]` becomes a real, shareable `.xlsx` file via a pluggable `Exporter` protocol — one row per lead, multi-value fields joined into a cell, disqualified leads included for audit visibility. |
 | [Phase 7 — Persistence](phase-7-persistence.md) | Durable memory across process runs: every `Lead` is upserted into a Postgres `leads` table by domain, and Discovery uses that same table to permanently skip domains it has already researched (configurable). |
 | [Phase 8 — API Layer](phase-8-api-layer.md) | The pipeline becomes a real HTTP service: background-job-plus-polling for slow discovery runs, an in-memory job store, no-op-when-unset API key auth, and read endpoints over the persisted `leads` table. |
+| [Phase 9 — Observability](phase-9-observability.md) | Langfuse tracing (one trace per lead run, across all 4 LLM providers), Prometheus metrics (`/metrics`: requests + job outcomes), and structured JSON logging with request IDs — all through one `setup_observability()` entry point shared by the API and CLI scripts. |
 
 ## Cookbooks (practical how-tos, not tied to one phase)
 
@@ -46,7 +47,7 @@ Phase 5  Discovery ........... a query becomes many candidates (the "initiative"
 Phase 6  Exporters ........... Excel first, pluggable (the "handoff")
 Phase 7  Persistence ......... Postgres `leads` table + permanent domain dedup (the "memory")
 Phase 8  API layer ........... FastAPI endpoints exposing the pipeline as a background-job service
-Phase 9  Observability ....... Langfuse tracing, Prometheus metrics
+Phase 9  Observability ....... Langfuse tracing, Prometheus metrics, structured JSON logging
 Phase 10 n8n .................. ingestion, human-approval sending, alerting
 Phase 11 Deploy ............... docker-compose -> minikube / Kubernetes; Supabase for prod Postgres
 Phase 12 Quality + polish ..... tests, eval harness, CI, demo GIF, README polish

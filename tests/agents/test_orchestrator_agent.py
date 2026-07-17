@@ -130,3 +130,62 @@ def test_build_lead_orchestrator_agent_from_settings():
     assert agent._icp_description == "Test ICP"
     assert agent._company_description == "Test Offering"
     assert agent._min_score_to_draft == 70
+
+
+class _FakeObservation:
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *args):
+        return False
+
+
+class _FakeLangfuseClient:
+    def __init__(self):
+        self.calls: list[str] = []
+
+    def start_as_current_observation(self, *, as_type, name):
+        self.calls.append(name)
+        return _FakeObservation()
+
+
+def test_run_creates_traced_spans_when_langfuse_client_provided():
+    scripts = [
+        '{"score": 85, "reasoning": "Strong B2B fit."}',
+        '{"subject": "Quick question", "body": "Hi -- noticed Acme makes widgets..."}',
+    ]
+    fake_client = _FakeLangfuseClient()
+    agent = LeadOrchestratorAgent(
+        _ScriptedLLM(scripts), _FakeResearchAgent(_brief()),
+        icp_description="B2B companies", company_description="We sell tools for widget makers.",
+        min_score_to_draft=60,
+        langfuse_client=fake_client,
+    )
+    agent.run("acme.com")
+
+    assert fake_client.calls == ["lead-orchestrator-run", "research", "qualify", "draft"]
+
+
+def test_run_skips_draft_span_when_disqualified():
+    scripts = ['{"score": 20, "reasoning": "Not a B2B fit."}']
+    fake_client = _FakeLangfuseClient()
+    agent = LeadOrchestratorAgent(
+        _ScriptedLLM(scripts), _FakeResearchAgent(_brief()),
+        icp_description="B2B companies", company_description="We sell tools for widget makers.",
+        min_score_to_draft=60,
+        langfuse_client=fake_client,
+    )
+    agent.run("acme.com")
+
+    assert fake_client.calls == ["lead-orchestrator-run", "research", "qualify"]
+
+
+def test_build_lead_orchestrator_agent_has_no_langfuse_client_when_disabled():
+    s = Settings(
+        _env_file=None, llm_provider="openrouter", llm_model="test-model",
+        openrouter_api_key="k", research_search_mode="mock",
+        icp_description="Test ICP", company_description="Test Offering",
+        langfuse_enabled=False,
+    )
+    agent = build_lead_orchestrator_agent(s)
+    assert agent._langfuse_client is None

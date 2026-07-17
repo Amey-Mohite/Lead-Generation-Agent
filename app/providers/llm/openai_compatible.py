@@ -12,11 +12,15 @@ class OpenAICompatibleProvider:
         base_url: str | None = None,
         api_key: str | None = None,
         client=None,
+        langfuse_enabled: bool = False,
     ) -> None:
         self.name = name
         self.default_model = default_model
         if client is not None:
             self._client = client
+        elif langfuse_enabled:
+            from langfuse.openai import OpenAI
+            self._client = OpenAI(base_url=base_url, api_key=api_key)
         else:
             from openai import OpenAI
             self._client = OpenAI(base_url=base_url, api_key=api_key)

@@ -1,4 +1,5 @@
 from app.api.jobs import JobStore
+from app.observability.metrics import JOB_OUTCOMES
 
 
 def test_create_returns_a_queued_job():
@@ -40,3 +41,21 @@ def test_mark_failed_sets_error_and_finished_at():
 def test_get_returns_none_for_unknown_job_id():
     store = JobStore()
     assert store.get("nonexistent") is None
+
+
+def test_mark_done_records_job_outcome_metric():
+    store = JobStore()
+    job = store.create(kind="lead")
+    before = JOB_OUTCOMES.labels(kind="lead", status="done")._value.get()
+    store.mark_done(job.job_id, "result")
+    after = JOB_OUTCOMES.labels(kind="lead", status="done")._value.get()
+    assert after == before + 1
+
+
+def test_mark_failed_records_job_outcome_metric():
+    store = JobStore()
+    job = store.create(kind="discovery")
+    before = JOB_OUTCOMES.labels(kind="discovery", status="failed")._value.get()
+    store.mark_failed(job.job_id, "boom")
+    after = JOB_OUTCOMES.labels(kind="discovery", status="failed")._value.get()
+    assert after == before + 1

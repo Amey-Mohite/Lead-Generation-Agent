@@ -110,3 +110,13 @@ def test_complete_native_search_rejects_non_openai_provider():
     )
     with pytest.raises(ValueError, match="only supported for provider 'openai'"):
         provider.complete_native_search([ChatMessage(role="user", content="hi")])
+
+
+def test_langfuse_enabled_flag_does_not_affect_behavior_when_client_given():
+    captured: dict = {}
+    provider = OpenAICompatibleProvider(
+        name="openrouter", default_model="default-model", client=_FakeClient(captured),
+        langfuse_enabled=True,
+    )
+    resp = provider.complete([ChatMessage(role="user", content="hi")])
+    assert resp.content == "hello there"
