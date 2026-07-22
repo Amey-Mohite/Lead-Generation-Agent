@@ -31,7 +31,7 @@ def _run_lead_job(job_store: JobStore, job_id: str, settings: Settings, target: 
         build_lead_repository(settings).save(lead)
         job_store.mark_done(job_id, lead)
     except Exception as exc:
-        job_store.mark_failed(job_id, str(exc))
+        job_store.mark_failed(job_id, str(exc), settings)
 
 
 @router.post("/leads", status_code=202, response_model=JobAccepted)
@@ -80,7 +80,7 @@ def _run_discovery_job(
         leads = run_discovery_sweep(settings, queries=queries, max_results=max_results)
         job_store.mark_done(job_id, leads)
     except Exception as exc:
-        job_store.mark_failed(job_id, str(exc))
+        job_store.mark_failed(job_id, str(exc), settings)
 
 
 @router.post("/discovery", status_code=202, response_model=JobAccepted)
@@ -114,6 +114,7 @@ class LeadRecordOut(BaseModel):
     sources: list[str]
     outreach_subject: str | None
     outreach_body: str | None
+    approval_status: str | None
     first_seen_at: datetime
     last_seen_at: datetime
 
@@ -121,12 +122,15 @@ class LeadRecordOut(BaseModel):
 @router.get("/leads", response_model=list[LeadRecordOut])
 def list_leads(
     status: Literal["qualified", "disqualified"] | None = None,
+    approval_status: Literal["pending", "approved", "rejected", "sent"] | None = None,
     limit: int = 50,
     offset: int = 0,
     settings: Settings = Depends(get_settings),
 ) -> list[LeadRecordOut]:
     repository = build_lead_repository(settings)
-    records = repository.list_leads(status=status, limit=limit, offset=offset)
+    records = repository.list_leads(
+        status=status, approval_status=approval_status, limit=limit, offset=offset
+    )
     return [LeadRecordOut.model_validate(r) for r in records]
 
 
@@ -137,3 +141,39 @@ def get_lead(domain: str, settings: Settings = Depends(get_settings)) -> LeadRec
     if record is None:
         raise HTTPException(status_code=404, detail="lead not found")
     return LeadRecordOut.model_validate(record)
+
+
+class ApprovalDecisionRequest(BaseModel):
+    decision: Literal["approved", "rejected"]
+
+
+@router.post("/leads/{domain}/approval", response_model=LeadRecordOut)
+def decide_lead_approval(
+    domain: str, body: ApprovalDecisionRequest, settings: Settings = Depends(get_settings),
+) -> LeadRecordOut:
+    repository = build_lead_repository(settings)
+    record = repository.get_by_domain(domain)
+    if record is None:
+        raise HTTPException(status_code=404, detail="lead not found")
+    if record.approval_status != "pending":
+        raise HTTPException(
+            status_code=400,
+            detail=f"lead is not pending approval (current status: {record.approval_status})",
+        )
+    updated = repository.set_approval_status(domain, body.decision)
+    return LeadRecordOut.model_validate(updated)
+
+
+@router.post("/leads/{domain}/sent", response_model=LeadRecordOut)
+def mark_lead_sent(domain: str, settings: Settings = Depends(get_settings)) -> LeadRecordOut:
+    repository = build_lead_repository(settings)
+    record = repository.get_by_domain(domain)
+    if record is None:
+        raise HTTPException(status_code=404, detail="lead not found")
+    if record.approval_status != "approved":
+        raise HTTPException(
+            status_code=400,
+            detail=f"lead is not approved (current status: {record.approval_status})",
+        )
+    updated = repository.set_approval_status(domain, "sent")
+    return LeadRecordOut.model_validate(updated)

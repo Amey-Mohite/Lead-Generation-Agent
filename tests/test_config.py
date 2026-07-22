@@ -7,7 +7,7 @@ def test_defaults():
     assert s.llm_provider == "openrouter"
     assert s.research_search_mode == "native"
     assert s.exporters == "excel"
-    assert s.langfuse_enabled is False
+    assert s.langfuse_enabled is True
 
 
 def test_env_override(monkeypatch):

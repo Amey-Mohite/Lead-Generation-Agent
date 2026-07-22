@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Autonomous Lead-Generation Agent — Engineering Dossier</title>
+<style>
+  :root {
+    --bg: #F4F5F7;
+    --surface: #FFFFFF;
+    --surface-2: #EBEDF1;
+    --line: #DCE0E6;
+    --ink: #171B21;
+    --ink-dim: #5B6472;
+    --ink-faint: #8991A0;
+    --accent: #B8791F;
+    --accent-soft: #F3E2C6;
+    --accent-ink: #FFFFFF;
+    --teal: #2A8F82;
+    --teal-soft: #DCEFEC;
+    --coral: #C25640;
+    --coral-soft: #F5E0DA;
+    --shadow: 0 1px 2px rgba(23,27,33,0.04);
+    --font-display: ui-monospace, "JetBrains Mono", "Fira Code", "SF Mono", Menlo, Consolas, monospace;
+    --font-body: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #12161C;
+      --surface: #1A212B;
+      --surface-2: #212936;
+      --line: #2B3542;
+      --ink: #EDEFF2;
+      --ink-dim: #99A2AF;
+      --ink-faint: #656E7C;
+      --accent: #E8A33D;
+      --accent-soft: #3A2C15;
+      --accent-ink: #1A1206;
+      --teal: #5AC2B5;
+      --teal-soft: #16302C;
+      --coral: #E2846C;
+      --coral-soft: #34201B;
+      --shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+  }
+
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto; }
+    * { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+  }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: var(--font-body);
+    font-size: 16px;
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1, h2, h3 { font-family: var(--font-display); font-weight: 700; letter-spacing: -0.01em; text-wrap: balance; margin: 0; }
+  code, .mono { font-family: var(--font-display); }
+  p { margin: 0 0 1em; max-width: 68ch; }
+  a { color: var(--accent); }
+
+  .wrap { max-width: 920px; margin: 0 auto; padding: 0 28px; }
+  .wrap-wide { max-width: 1160px; margin: 0 auto; padding: 0 28px; }
+
+  /* ---------- Top nav ---------- */
+  .topnav {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 88%, transparent);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid var(--line);
+  }
+  .topnav-inner {
+    max-width: 1160px; margin: 0 auto; padding: 0 28px;
+    display: flex; align-items: center; gap: 24px; height: 52px;
+    overflow-x: auto;
+  }
+  .topnav-brand { font-family: var(--font-display); font-weight: 700; font-size: 13px; color: var(--ink); white-space: nowrap; text-decoration: none; }
+  .topnav-links { display: flex; gap: 18px; flex-wrap: nowrap; }
+  .topnav-links a {
+    font-family: var(--font-display); font-size: 12.5px; text-decoration: none;
+    color: var(--ink-dim); white-space: nowrap; letter-spacing: 0.01em;
+    padding: 4px 0; border-bottom: 2px solid transparent;
+  }
+  .topnav-links a:hover { color: var(--ink); border-color: var(--accent); }
+
+  /* ---------- Hero ---------- */
+  .hero { padding: 72px 0 40px; }
+  .hero-eyebrow {
+    font-family: var(--font-display); font-size: 12.5px; color: var(--accent);
+    letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 18px;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .hero-eyebrow::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .hero h1 { font-size: clamp(32px, 5vw, 52px); line-height: 1.08; max-width: 16ch; }
+  .hero-sub { font-size: 18px; color: var(--ink-dim); max-width: 56ch; margin-top: 20px; }
+
+  .stat-strip {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+    gap: 1px; background: var(--line); border: 1px solid var(--line);
+    border-radius: 10px; overflow: hidden; margin-top: 40px;
+  }
+  .stat { background: var(--surface); padding: 18px 20px; }
+  .stat-num { font-family: var(--font-display); font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; color: var(--ink); }
+  .stat-label { font-size: 12.5px; color: var(--ink-faint); margin-top: 4px; }
+
+  /* ---------- Section scaffolding ---------- */
+  section { padding: 64px 0; border-top: 1px solid var(--line); }
+  section:first-of-type { border-top: none; }
+  .section-head { display: flex; align-items: baseline; gap: 14px; margin-bottom: 32px; }
+  .section-num { font-family: var(--font-display); font-size: 13px; color: var(--ink-faint); }
+  .section-head h2 { font-size: clamp(22px, 3vw, 30px); }
+  .section-kicker { font-size: 16px; color: var(--ink-dim); max-width: 62ch; margin-bottom: 32px; }
+
+  /* ---------- Pipeline diagram ---------- */
+  .pipeline { display: flex; flex-wrap: wrap; gap: 0; align-items: stretch; }
+  .stage {
+    flex: 1 1 150px; background: var(--surface); border: 1px solid var(--line);
+    border-radius: 10px; padding: 16px 16px 18px; position: relative;
+  }
+  .stage + .stage { margin-left: 22px; }
+  .stage + .stage::before {
+    content: "→"; position: absolute; left: -22px; top: 50%; transform: translateY(-50%);
+    color: var(--ink-faint); font-family: var(--font-display); font-size: 15px;
+  }
+  .stage-tag { font-family: var(--font-display); font-size: 10.5px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--accent); }
+  .stage-title { font-weight: 700; font-size: 15px; margin: 6px 0 6px; }
+  .stage-desc { font-size: 13px; color: var(--ink-dim); line-height: 1.5; }
+  .stage.gate { border-color: var(--accent); background: var(--accent-soft); }
+  .stage.gate .stage-tag { color: var(--accent); }
+  @media (max-width: 900px) {
+    .pipeline { flex-direction: column; }
+    .stage + .stage { margin-left: 0; margin-top: 22px; }
+    .stage + .stage::before { content: "↓"; left: 50%; top: -22px; transform: translateX(-50%); }
+  }
+
+  /* ---------- Cards / grid ---------- */
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 760px) { .grid-2, .grid-3 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--surface); border: 1px solid var(--line); border-radius: 10px;
+    padding: 20px 22px; box-shadow: var(--shadow);
+  }
+  .card h3 { font-size: 15px; margin-bottom: 8px; }
+  .card p { font-size: 14px; color: var(--ink-dim); margin-bottom: 0; }
+
+  /* ---------- API table ---------- */
+  .api-group { margin-bottom: 30px; }
+  .api-group-label {
+    font-family: var(--font-display); font-size: 12px; letter-spacing: 0.07em;
+    text-transform: uppercase; color: var(--ink-faint); margin-bottom: 10px;
+  }
+  .endpoint-table { width: 100%; overflow-x: auto; }
+  .endpoint {
+    display: grid; grid-template-columns: 60px 1fr auto; gap: 14px; align-items: center;
+    padding: 13px 0; border-bottom: 1px solid var(--line);
+  }
+  .endpoint:last-child { border-bottom: none; }
+  .method {
+    font-family: var(--font-display); font-size: 11px; font-weight: 700; text-align: center;
+    padding: 3px 0; border-radius: 5px; letter-spacing: 0.02em;
+  }
+  .method.get { background: var(--teal-soft); color: var(--teal); }
+  .method.post { background: var(--accent-soft); color: var(--accent); }
+  .endpoint-main { min-width: 0; }
+  .endpoint-path { font-family: var(--font-display); font-size: 13.5px; color: var(--ink); display: block; overflow-wrap: break-word; }
+  .endpoint-desc { font-size: 13px; color: var(--ink-dim); margin-top: 2px; }
+  .endpoint-auth { font-size: 11px; color: var(--ink-faint); font-family: var(--font-display); white-space: nowrap; }
+
+  /* ---------- Schema table ---------- */
+  .schema-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+  .schema-table th {
+    text-align: left; font-family: var(--font-display); font-size: 11px; letter-spacing: 0.05em;
+    text-transform: uppercase; color: var(--ink-faint); padding: 0 12px 10px 0; border-bottom: 1px solid var(--line);
+  }
+  .schema-table td { padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .schema-table tr:last-child td { border-bottom: none; }
+  .field-name { font-family: var(--font-display); color: var(--ink); }
+  .field-type { font-family: var(--font-display); color: var(--ink-faint); font-size: 12.5px; }
+  .schema-note { font-size: 13px; color: var(--ink-dim); }
+
+  /* ---------- State machine ---------- */
+  .state-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 20px; }
+  .state-pill {
+    font-family: var(--font-display); font-size: 12.5px; padding: 6px 14px; border-radius: 999px;
+    border: 1px solid var(--line); background: var(--surface-2); color: var(--ink-dim);
+  }
+  .state-pill.pending { border-color: var(--accent); color: var(--accent); }
+  .state-pill.approved { border-color: var(--teal); color: var(--teal); }
+  .state-pill.sent { background: var(--teal); color: var(--surface); border-color: var(--teal); }
+  .state-pill.rejected { border-color: var(--coral); color: var(--coral); }
+  .state-arrow { color: var(--ink-faint); font-family: var(--font-display); }
+
+  /* ---------- Timeline ---------- */
+  .timeline { position: relative; padding-left: 34px; }
+  .timeline::before { content: ""; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 1px; background: var(--line); }
+  .tl-item { position: relative; padding-bottom: 26px; }
+  .tl-item:last-child { padding-bottom: 0; }
+  .tl-num {
+    position: absolute; left: -34px; top: 0; width: 19px; height: 19px; border-radius: 50%;
+    background: var(--surface); border: 1px solid var(--accent); color: var(--accent);
+    font-family: var(--font-display); font-size: 10px; display: flex; align-items: center; justify-content: center;
+  }
+  .tl-title { font-weight: 700; font-size: 15px; }
+  .tl-desc { font-size: 13.5px; color: var(--ink-dim); margin-top: 3px; max-width: 64ch; }
+
+  /* ---------- Callout ---------- */
+  .callout {
+    border: 1px solid var(--line); border-left: 3px solid var(--accent);
+    background: var(--surface); border-radius: 0 10px 10px 0; padding: 18px 22px;
+  }
+  .callout p:last-child { margin-bottom: 0; }
+  .callout ul { margin: 8px 0 0; padding-left: 18px; font-size: 14px; color: var(--ink-dim); }
+  .callout li { margin-bottom: 6px; }
+
+  /* ---------- Tech chips ---------- */
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip {
+    font-family: var(--font-display); font-size: 12.5px; padding: 6px 12px; border-radius: 7px;
+    background: var(--surface-2); border: 1px solid var(--line); color: var(--ink-dim);
+  }
+
+  footer { padding: 48px 0 64px; }
+  .foot-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+  .foot-note { font-size: 13px; color: var(--ink-faint); max-width: 50ch; }
+
+  ::selection { background: var(--accent-soft); color: var(--ink); }
+</style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-inner">
+    <a class="topnav-brand" href="#top">LEAD-GEN.AGENT</a>
+    <div class="topnav-links">
+      <a href="#architecture">Architecture</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#api">API</a>
+      <a href="#data">Data Model</a>
+      <a href="#observability">Observability</a>
+      <a href="#orchestration">n8n</a>
+      <a href="#timeline">Build Log</a>
+      <a href="#deploy">Deploy</a>
+    </div>
+  </div>
+</nav>
+
+<div id="top"></div>
+
+<div class="wrap">
+  <div class="hero">
+    <div class="hero-eyebrow">Engineering dossier</div>
+    <h1>An agent that finds companies, researches them, and knows when not to email them.</h1>
+    <p class="hero-sub">
+      A production-shaped, multi-agent lead-generation system: turn a broad query into real
+      candidate companies, research each one autonomously, qualify it against a configurable
+      ideal-customer profile, draft outreach worth sending — and gate every send behind a human,
+      not a script.
+    </p>
+
+    <div class="stat-strip">
+      <div class="stat"><div class="stat-num">11</div><div class="stat-label">phases shipped</div></div>
+      <div class="stat"><div class="stat-num">188</div><div class="stat-label">automated tests</div></div>
+      <div class="stat"><div class="stat-num">4</div><div class="stat-label">LLM providers, swappable</div></div>
+      <div class="stat"><div class="stat-num">10</div><div class="stat-label">API endpoints</div></div>
+      <div class="stat"><div class="stat-num">3</div><div class="stat-label">n8n workflows</div></div>
+      <div class="stat"><div class="stat-num">1</div><div class="stat-label">human approval gate</div></div>
+    </div>
+  </div>
+</div>
+
+<section id="architecture">
+  <div class="wrap">
+    <div class="section-head"><span class="section-num">01</span><h2>Architecture</h2></div>
+    <p class="section-kicker">
+      Two agents, composed rather than merged. A <strong>Research Agent</strong> runs an autonomous
+      tool-calling loop to build a factual brief on a company. A <strong>Lead Orchestrator</strong>
+      takes that brief, scores it against an Ideal Customer Profile, and — only if it clears the
+      bar — drafts a personalized outreach email. A <strong>Discovery layer</strong> sits in front of
+      both, turning "credit unions in the UK" into fifty real domains to run through the same
+      pipeline. Everything downstream (persistence, the API, n8n) treats the orchestrator as the
+      one thing that decides whether a lead is worth anyone's time.
+    </p>
+    <div class="grid-2">
+      <div class="card">
+        <h3>Composed, not monolithic</h3>
+        <p>The Research Agent doesn't know what an ICP is. The Orchestrator doesn't know how to
+          search the web. Discovery doesn't qualify anything — it just proposes candidates and
+          hands them to the Orchestrator unmodified. Each piece is replaceable on its own.</p>
+      </div>
+      <div class="card">
+        <h3>Swap the model, not the code</h3>
+        <p>OpenRouter, NVIDIA NIM, OpenAI, and Anthropic sit behind one <code>LLMProvider</code>
+          interface with automatic fallback. Changing providers is a one-line config edit, not a
+          rewrite — verified against each SDK's real signatures, not assumed from memory.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pipeline">
+  <div class="wrap-wide">
+    <div class="section-head"><span class="section-num">02</span><h2>The pipeline, end to end</h2></div>
+    <p class="section-kicker">
+      Every lead moves through the same seven stages — cost-saving short-circuits and a human
+      checkpoint included, not bolted on after the fact.
+    </p>
+    <div class="pipeline">
+      <div class="stage">
+        <div class="stage-tag">01 · discover</div>
+        <div class="stage-title">Query → candidates</div>
+        <div class="stage-desc">One broad query becomes a batch of real candidate companies via a single structured extraction call.</div>
+      </div>
+      <div class="stage">
+        <div class="stage-tag">02 · research</div>
+        <div class="stage-title">Autonomous tool loop</div>
+        <div class="stage-desc">A ReAct-style agent searches and fetches pages to build a factual brief: summary, key facts, contacts, sources.</div>
+      </div>
+      <div class="stage">
+        <div class="stage-tag">03 · qualify</div>
+        <div class="stage-title">Score vs. ICP</div>
+        <div class="stage-desc">0–100 fit score plus reasoning, against a config-driven Ideal Customer Profile. Below threshold stops here — no draft call fires.</div>
+      </div>
+      <div class="stage">
+        <div class="stage-tag">04 · draft</div>
+        <div class="stage-title">Personalized outreach</div>
+        <div class="stage-desc">Subject + body referencing a real fact from research and a real capability of the sender — never generic copy.</div>
+      </div>
+      <div class="stage gate">
+        <div class="stage-tag">05 · approve</div>
+        <div class="stage-title">A human decides</div>
+        <div class="stage-desc">n8n posts the draft to Slack. Nothing sends until a person clicks approve.</div>
+      </div>
+      <div class="stage">
+        <div class="stage-tag">06 · send</div>
+        <div class="stage-title">Outreach goes out</div>
+        <div class="stage-desc">Only on approval — via Gmail, orchestrated by n8n, not the app itself.</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="api">
+  <div class="wrap">
+    <div class="section-head"><span class="section-num">03</span><h2>API reference</h2></div>
+    <p class="section-kicker">
+      A background-job-plus-polling FastAPI service — long-running research/discovery sweeps
+      return a job ID immediately rather than holding a connection open. Every <code>/v1/*</code>
+      route sits behind an optional API key, off by default for local development.
+    </p>
+
+    <div class="api-group">
+      <div class="api-group-label">Trigger a run</div>
+      <div class="endpoint-table">
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-main"><span class="endpoint-path">/v1/leads</span><div class="endpoint-desc">Research + qualify + draft one target. Returns <code>202 {job_id, status}</code> immediately.</div></div>
+          <span class="endpoint-auth">X-API-Key</span>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-main"><span class="endpoint-path">/v1/discovery</span><div class="endpoint-desc">Sweep one or more queries, fan each candidate through the full pipeline.</div></div>
+          <span class="endpoint-auth">X-API-Key</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-main"><span class="endpoint-path">/v1/jobs/{job_id}</span><div class="endpoint-desc">Poll status: <code>queued → running → done | failed</code>, with result or error.</div></div>
+          <span class="endpoint-auth">X-API-Key</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-group">
+      <div class="api-group-label">Read &amp; manage leads</div>
+      <div class="endpoint-table">
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-main"><span class="endpoint-path">/v1/leads</span><div class="endpoint-desc">List persisted leads — filter by <code>status</code> or <code>approval_status</code>, paginated.</div></div>
+          <span class="endpoint-auth">X-API-Key</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-main"><span class="endpoint-path">/v1/leads/{domain}</span><div class="endpoint-desc">Fetch one lead's full record by domain.</div></div>
+          <span class="endpoint-auth">X-API-Key</span>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-main"><span class="endpoint-path">/v1/leads/{domain}/approval</span><div class="endpoint-desc">Record a human decision — <code>{"decision": "approved"|"rejected"}</code>. 400 unless currently pending.</div></div>
+          <span class="endpoint-auth">X-API-Key</span>
+        </div>
+        <div class="endpoint">
+          <span class="method post">POST</span>
+          <div class="endpoint-main"><span class="endpoint-path">/v1/leads/{domain}/sent</span><div class="endpoint-desc">Mark outreach as sent. 400 unless currently approved.</div></div>
+          <span class="endpoint-auth">X-API-Key</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="api-group">
+      <div class="api-group-label">Health &amp; ops (unauthenticated)</div>
+      <div class="endpoint-table">
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-main"><span class="endpoint-path">/health</span><div class="endpoint-desc">Liveness probe.</div></div>
+          <span class="endpoint-auth">open</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-main"><span class="endpoint-path">/ready</span><div class="endpoint-desc">Readiness — checks a real database connection.</div></div>
+          <span class="endpoint-auth">open</span>
+        </div>
+        <div class="endpoint">
+          <span class="method get">GET</span>
+          <div class="endpoint-main"><span class="endpoint-path">/metrics</span><div class="endpoint-desc">Prometheus exposition — request counts/latency, job outcomes.</div></div>
+          <span class="endpoint-auth">open</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="data">
+  <div class="wrap">
+    <div class="section-head"><span class="section-num">04</span><h2>Data model</h2></div>
+    <p class="section-kicker">
+      One table, one row per domain, upserted permanently — a domain is never re-processed once
+      seen, and a human's approval decision is never silently overwritten by a later re-run.
+    </p>
+
+    <table class="schema-table">
+      <thead><tr><th>Field</th><th>Type</th><th>Note</th></tr></thead>
+      <tbody>
+        <tr><td class="field-name">domain</td><td class="field-type">string · unique</td><td class="schema-note">Primary dedup key — a domain is claimed permanently once persisted.</td></tr>
+        <tr><td class="field-name">company_name, industry</td><td class="field-type">string</td><td class="schema-note">From the research brief.</td></tr>
+        <tr><td class="field-name">status</td><td class="field-type">qualified · disqualified</td><td class="schema-note">Set once, by the Orchestrator.</td></tr>
+        <tr><td class="field-name">score, reasoning</td><td class="field-type">int 0–100 · text</td><td class="schema-note">The qualification verdict against the ICP.</td></tr>
+        <tr><td class="field-name">summary, key_facts, contacts, sources</td><td class="field-type">text · arrays</td><td class="schema-note">The research brief, in full.</td></tr>
+        <tr><td class="field-name">outreach_subject, outreach_body</td><td class="field-type">string · text</td><td class="schema-note">Present only when qualified.</td></tr>
+        <tr><td class="field-name">approval_status</td><td class="field-type">pending · approved · rejected · sent · null</td><td class="schema-note">The human-in-the-loop state machine — see below.</td></tr>
+        <tr><td class="field-name">first_seen_at, last_seen_at</td><td class="field-type">timestamp</td><td class="schema-note">Audit trail across re-researches.</td></tr>
+      </tbody>
+    </table>
+
+    <div class="state-row">
+      <span class="state-pill">null</span><span class="state-arrow">→</span>
+      <span class="state-pill pending">pending</span><span class="state-arrow">→</span>
+      <span class="state-pill approved">approved</span><span class="state-arrow">→</span>
+      <span class="state-pill sent">sent</span>
+    </div>
+    <div class="state-row">
+      <span class="state-pill" style="visibility:hidden">null</span><span class="state-arrow" style="visibility:hidden">→</span>
+      <span class="state-pill pending" style="visibility:hidden">pending</span><span class="state-arrow">↘</span>
+      <span class="state-pill rejected">rejected</span>
+      <span style="font-size:13px;color:var(--ink-faint);margin-left:6px;">— terminal, no further action</span>
+    </div>
+  </div>
+</section>
+
+<section id="observability">
+  <div class="wrap">
+    <div class="section-head"><span class="section-num">05</span><h2>Observability</h2></div>
+    <p class="section-kicker">
+      Three pillars, one entry point — <code>setup_observability()</code> — called identically from
+      the API and every CLI script, so behavior never depends on how the process was started.
+    </p>
+    <div class="grid-3">
+      <div class="card">
+        <h3>Tracing</h3>
+        <p>One Langfuse trace per lead run, nested spans for research/qualify/draft, across all
+          four LLM providers — via a drop-in client swap for OpenAI-compatible providers and
+          global instrumentation for Anthropic.</p>
+      </div>
+      <div class="card">
+        <h3>Metrics</h3>
+        <p>Prometheus <code>/metrics</code> on a dedicated registry: request count and latency by
+          route template (never a raw ID, to avoid label-cardinality blowups), plus job outcomes
+          by kind and status.</p>
+      </div>
+      <div class="card">
+        <h3>Logging</h3>
+        <p>Structured JSON on every log line, with a per-request correlation ID propagated via
+          <code>contextvars</code> — no ID threaded manually through the call stack.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="orchestration">
+  <div class="wrap">
+    <div class="section-head"><span class="section-num">06</span><h2>n8n orchestration</h2></div>
+    <p class="section-kicker">
+      n8n never re-implements the agent — it calls the API and owns the parts that need a human
+      or an external inbox: triggering, approval routing, and sending.
+    </p>
+    <div class="grid-3">
+      <div class="card">
+        <h3>01 · Ingestion</h3>
+        <p>A webhook accepts a target or query and routes it to <code>/v1/leads</code> or
+          <code>/v1/discovery</code> — lets a non-technical trigger (a form, a Sheet row, a CRM
+          event) start a run.</p>
+      </div>
+      <div class="card">
+        <h3>02 · Approval + send</h3>
+        <p>Polls for pending drafts, posts them to Slack with approve/reject buttons, and on
+          approval fetches the full lead and sends it via Gmail — closing the loop back to the API.</p>
+      </div>
+      <div class="card">
+        <h3>03 · Alerting</h3>
+        <p>Push, not poll: the app calls an n8n webhook the instant a background job fails, which
+          posts straight to an ops Slack channel — no counter-diffing, no detection delay.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="timeline">
+  <div class="wrap">
+    <div class="section-head"><span class="section-num">07</span><h2>How it was built</h2></div>
+    <p class="section-kicker">
+      Eleven phases, each shipped with its own design spec, implementation plan, and code review
+      before merge — test-driven throughout, with real bugs found and fixed by actually running
+      the thing, not just by writing code that compiles.
+    </p>
+
+    <div class="timeline">
+      <div class="tl-item"><div class="tl-num">1</div><div class="tl-title">Foundations</div><div class="tl-desc">Config, FastAPI app factory, Postgres, health/readiness probes, Docker.</div></div>
+      <div class="tl-item"><div class="tl-num">2</div><div class="tl-title">Multi-provider LLM layer</div><div class="tl-desc">One provider interface across OpenRouter, NVIDIA, OpenAI, and Anthropic, with automatic fallback.</div></div>
+      <div class="tl-item"><div class="tl-num">3</div><div class="tl-title">Research sub-agent</div><div class="tl-desc">An autonomous tool-calling loop — web search and page-fetch tools, bounded turns, self-correcting structured output.</div></div>
+      <div class="tl-item"><div class="tl-num">4</div><div class="tl-title">Lead Orchestrator</div><div class="tl-desc">Qualification against a configurable ICP; drafting only fires when a lead actually clears the bar.</div></div>
+      <div class="tl-item"><div class="tl-num">5</div><div class="tl-title">Discovery layer</div><div class="tl-desc">One broad query fans out into many researched, qualified, drafted leads automatically.</div></div>
+      <div class="tl-item"><div class="tl-num">6</div><div class="tl-title">Exporters</div><div class="tl-desc">A pluggable export protocol, Excel first — the first durable, shareable artifact out of the pipeline.</div></div>
+      <div class="tl-item"><div class="tl-num">7</div><div class="tl-title">Persistence</div><div class="tl-desc">Postgres via Alembic migrations; permanent domain dedup so nothing gets re-researched twice.</div></div>
+      <div class="tl-item"><div class="tl-num">8</div><div class="tl-title">API layer</div><div class="tl-desc">Background-job-plus-polling FastAPI service, so long sweeps never hold a connection open.</div></div>
+      <div class="tl-item"><div class="tl-num">9</div><div class="tl-title">Observability</div><div class="tl-desc">Langfuse tracing, Prometheus metrics, structured logging — through one shared entry point.</div></div>
+      <div class="tl-item"><div class="tl-num">10</div><div class="tl-title">n8n integration</div><div class="tl-desc">A human-approval gate, an ingestion trigger, and push-based failure alerting.</div></div>
+      <div class="tl-item"><div class="tl-num">11</div><div class="tl-title">Deploy</div><div class="tl-desc">docker-compose brings up the whole stack; Kubernetes and a managed Postgres are the documented next step.</div></div>
+    </div>
+
+    <div class="callout" style="margin-top:36px;">
+      <p><strong>Not just "it ran once."</strong> A handful of real issues surfaced by actually
+        exercising the system, not by inspection:</p>
+      <ul>
+        <li>A connection-pool leak where a new database engine was created on every request — caught and fixed before it became a production incident.</li>
+        <li>An unbounded-cardinality risk in Prometheus labels (real request paths instead of route templates) — caught in review, fixed before merge.</li>
+        <li>A dedup bug where Discovery silently returned zero new candidates once every result had already been seen — fixed by teaching the search itself which domains to skip.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="deploy">
+  <div class="wrap">
+    <div class="section-head"><span class="section-num">08</span><h2>Deployment &amp; stack</h2></div>
+    <p class="section-kicker">
+      <code>docker compose up</code> brings up the app, Postgres, and n8n together. Kubernetes and a
+      managed Postgres provider are the documented path for a real production deployment — not
+      built here, deliberately, since this stage is about proving the system, not standing up a
+      cluster.
+    </p>
+    <div class="chips">
+      <span class="chip">Python 3.12</span><span class="chip">FastAPI</span><span class="chip">Pydantic</span>
+      <span class="chip">SQLAlchemy</span><span class="chip">Alembic</span><span class="chip">PostgreSQL</span>
+      <span class="chip">OpenRouter</span><span class="chip">NVIDIA NIM</span><span class="chip">OpenAI</span>
+      <span class="chip">Anthropic</span><span class="chip">Langfuse</span><span class="chip">Prometheus</span>
+      <span class="chip">n8n</span><span class="chip">Docker</span><span class="chip">pytest</span>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="foot-row">
+      <p class="foot-note">A solo-built, phase-by-phase system — every phase shipped with a design
+        spec, a plan, tests, and a review before the next one started.</p>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function () {
+    var links = document.querySelectorAll('.topnav-links a');
+    var sections = Array.prototype.map.call(links, function (a) {
+      return document.querySelector(a.getAttribute('href'));
+    });
+    function onScroll() {
+      var y = window.scrollY + 80;
+      var active = 0;
+      sections.forEach(function (s, i) { if (s && s.offsetTop <= y) active = i; });
+      links.forEach(function (a, i) {
+        a.style.color = i === active ? 'var(--ink)' : '';
+        a.style.borderColor = i === active ? 'var(--accent)' : 'transparent';
+      });
+    }
+    document.addEventListener('scroll', onScroll, { passive: true });
+    onScroll();
+  })();
+</script>
+</body>
+</html>

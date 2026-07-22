@@ -1,0 +1,57 @@
+{
+  "name": "01 - Trigger Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "trigger-lead",
+        "httpMethod": "POST",
+        "responseMode": "responseNode"
+      },
+      "id": "1a1a1a1a-0001-4000-8000-000000000001",
+      "name": "Webhook - Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.body.query || $json.body.queries ? \"http://app:8000/v1/discovery\" : \"http://app:8000/v1/leads\" }}",
+        "sendBody": true,
+        "jsonBody": "={{ JSON.stringify($json.body) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "1a1a1a1a-0002-4000-8000-000000000002",
+      "name": "HTTP Request - Call App",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "allIncomingItems",
+        "options": {}
+      },
+      "id": "1a1a1a1a-0003-4000-8000-000000000003",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [680, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Trigger": {
+      "main": [[{ "node": "HTTP Request - Call App", "type": "main", "index": 0 }]]
+    },
+    "HTTP Request - Call App": {
+      "main": [[{ "node": "Respond to Webhook", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": {
+    "notes": "Ingestion trigger. POST a JSON body ({\"target\": \"acme.com\"}, or {\"query\": \"...\"} / {\"queries\": [...]}) to this workflow's webhook URL. Routes to POST /v1/discovery when the body has query/queries, otherwise POST /v1/leads. The HTTP Request node needs an httpHeaderAuth credential configured in n8n (header name X-API-Key, value = the app's API_KEY). Not imported or run as part of Phase 10 -- import via n8n's 'Import from File' and wire the credential yourself when ready."
+  }
+}

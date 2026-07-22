@@ -66,6 +66,7 @@ class Settings(BaseSettings):
     langfuse_public_key: str | None = None
     langfuse_secret_key: str | None = None
     langfuse_host: str | None = None
+    n8n_alert_webhook_url: str | None = None
 
     # Infra / API
     database_url: str = "postgresql+psycopg://postgres:password@localhost:5432/leadgen"

@@ -37,6 +37,8 @@ class LeadRepository:
             record.sources = lead.research.sources
             record.outreach_subject = lead.outreach.subject if lead.outreach else None
             record.outreach_body = lead.outreach.body if lead.outreach else None
+            if lead.status == "qualified" and record.approval_status is None:
+                record.approval_status = "pending"
             record.last_seen_at = now
             session.commit()
 
@@ -58,18 +60,31 @@ class LeadRepository:
             return list(session.scalars(select(LeadRecord.domain)))
 
     def list_leads(
-        self, status: str | None = None, limit: int = 50, offset: int = 0
+        self, status: str | None = None, approval_status: str | None = None,
+        limit: int = 50, offset: int = 0
     ) -> list[LeadRecord]:
         with self._session_factory() as session:
             stmt = select(LeadRecord).order_by(LeadRecord.last_seen_at.desc())
             if status is not None:
                 stmt = stmt.where(LeadRecord.status == status)
+            if approval_status is not None:
+                stmt = stmt.where(LeadRecord.approval_status == approval_status)
             stmt = stmt.offset(offset).limit(limit)
             return list(session.scalars(stmt))
 
     def get_by_domain(self, domain: str) -> LeadRecord | None:
         with self._session_factory() as session:
             return session.scalar(select(LeadRecord).where(LeadRecord.domain == domain))
+
+    def set_approval_status(self, domain: str, approval_status: str) -> LeadRecord | None:
+        with self._session_factory() as session:
+            record = session.scalar(select(LeadRecord).where(LeadRecord.domain == domain))
+            if record is None:
+                return None
+            record.approval_status = approval_status
+            session.commit()
+            session.refresh(record)
+            return record
 
 
 @lru_cache

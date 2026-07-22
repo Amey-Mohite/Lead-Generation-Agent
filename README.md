@@ -11,7 +11,7 @@ human-approval sending.
 
 ## Status
 
-Built in phases (see `docs/superpowers/plans/`). **Current: Phase 9 — Observability** ✅
+Built in phases (see `docs/superpowers/plans/`). **Current: Phase 11 — Deploy** ✅
 
 - [x] Phase 1 — Foundations: config, FastAPI, Postgres, health/ready, Docker
 - [x] Phase 2 — Multi-provider LLM layer (OpenRouter/NVIDIA/OpenAI/Anthropic + fallback)
@@ -22,9 +22,11 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 9 — Observab
 - [x] Phase 7 — Persistence (Postgres `leads` table via Alembic; permanent domain dedup for Discovery)
 - [x] Phase 8 — API layer (background-job-plus-polling FastAPI endpoints; no-op-when-unset API key auth)
 - [x] Phase 9 — Observability (Langfuse tracing across all 4 providers; Prometheus `/metrics`; structured JSON logging)
-- [ ] Phase 10 — n8n integration (ingestion, human-approval sending, alerting)
-- [ ] Phase 11 — Deploy (docker-compose → minikube / Kubernetes; Supabase for managed production Postgres)
-- [ ] Phase 12 — Quality + polish (tests, eval harness, CI, demo GIF, README polish)
+- [x] Phase 10 — n8n integration (approval-status state machine, 2 new API endpoints, push alerting, 3 n8n workflows -- built, not yet run/tested)
+- [x] Phase 11 — Deploy (docker-compose: app + Postgres + n8n; deployment docs in [`deploy/README.md`](deploy/README.md); minikube/Kubernetes + Supabase documented as a future path, not built)
+
+Phase 12 ("Quality + polish") is dropped from the roadmap — the project concludes here with the
+comprehensive documentation page linked below instead.
 
 ## Documentation
 
@@ -38,6 +40,7 @@ Built in phases (see `docs/superpowers/plans/`). **Current: Phase 9 — Observab
   - [Phase 7 — Persistence](docs/learning/phase-7-persistence.md)
   - [Phase 8 — API Layer](docs/learning/phase-8-api-layer.md)
   - [Phase 9 — Observability](docs/learning/phase-9-observability.md)
+  - [Phase 10 — n8n Integration](docs/learning/phase-10-n8n-integration.md)
   - [Cookbook: How to Add a New Tool](docs/learning/how-to-add-a-tool.md)
 - **Design spec** (system-level decisions) — `docs/superpowers/specs/2026-07-07-lead-generation-agent-design.md`
 - **Build plans** (step-by-step) — `docs/superpowers/plans/`

@@ -1,0 +1,41 @@
+{
+  "name": "03 - Alerting",
+  "nodes": [
+    {
+      "parameters": {
+        "path": "alert",
+        "httpMethod": "POST",
+        "responseMode": "onReceived"
+      },
+      "id": "3a3a3a3a-0001-4000-8000-000000000001",
+      "name": "Webhook - Receive Alert",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "resource": "message",
+        "operation": "post",
+        "channel": "#ops-alerts",
+        "text": "=Job failed: kind={{ $json.body.kind }} status={{ $json.body.status }} error={{ $json.body.error }}",
+        "otherOptions": {}
+      },
+      "id": "3a3a3a3a-0002-4000-8000-000000000002",
+      "name": "Slack - Post Alert",
+      "type": "n8n-nodes-base.slack",
+      "typeVersion": 2.2,
+      "position": [460, 300]
+    }
+  ],
+  "connections": {
+    "Webhook - Receive Alert": {
+      "main": [[{ "node": "Slack - Post Alert", "type": "main", "index": 0 }]]
+    }
+  },
+  "active": false,
+  "settings": { "executionOrder": "v1" },
+  "meta": {
+    "notes": "Receives the app's push-alert POST (app/observability/alerting.py::send_alert) whenever a background job fails, and posts it to a Slack ops channel. Set N8N_ALERT_WEBHOOK_URL in the app's .env to this workflow's webhook URL once imported and activated. Requires a Slack credential. Not imported or run as part of Phase 10."
+  }
+}

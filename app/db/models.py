@@ -24,5 +24,6 @@ class LeadRecord(Base):
     sources: Mapped[list] = mapped_column(JSON, default=list)
     outreach_subject: Mapped[str | None] = mapped_column(String(500), nullable=True)
     outreach_body: Mapped[str | None] = mapped_column(Text, nullable=True)
+    approval_status: Mapped[str | None] = mapped_column(String(20), nullable=True)
     first_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))

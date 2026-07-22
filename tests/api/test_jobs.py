@@ -1,4 +1,5 @@
 from app.api.jobs import JobStore
+from app.config import Settings
 from app.observability.metrics import JOB_OUTCOMES
 
 
@@ -59,3 +60,32 @@ def test_mark_failed_records_job_outcome_metric():
     store.mark_failed(job.job_id, "boom")
     after = JOB_OUTCOMES.labels(kind="discovery", status="failed")._value.get()
     assert after == before + 1
+
+
+def test_mark_failed_triggers_alert_when_settings_configured(monkeypatch):
+    import app.api.jobs as jobs_module
+    calls = []
+    monkeypatch.setattr(jobs_module, "send_alert", lambda settings, **kw: calls.append(kw))
+
+    store = JobStore()
+    job = store.create(kind="lead")
+    settings = Settings(
+        _env_file=None, n8n_alert_webhook_url="https://n8n.example.com/webhook/alert"
+    )
+
+    store.mark_failed(job.job_id, "boom", settings)
+
+    assert calls == [{"kind": "lead", "status": "failed", "error": "boom"}]
+
+
+def test_mark_failed_skips_alert_when_settings_omitted(monkeypatch):
+    import app.api.jobs as jobs_module
+    calls = []
+    monkeypatch.setattr(jobs_module, "send_alert", lambda settings, **kw: calls.append(kw))
+
+    store = JobStore()
+    job = store.create(kind="lead")
+
+    store.mark_failed(job.job_id, "boom")
+
+    assert calls == []

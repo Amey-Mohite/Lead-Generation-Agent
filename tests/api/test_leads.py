@@ -183,19 +183,20 @@ def test_trigger_discovery_run_falls_back_to_default_query_when_nothing_configur
     assert get_resp.json()["status"] == "done"
 
 
-def _fake_record(domain: str, company_name: str) -> LeadRecord:
+def _fake_record(domain: str, company_name: str, approval_status: str | None = "pending") -> LeadRecord:
     now = datetime.now(timezone.utc)
     return LeadRecord(
         id=1, domain=domain, company_name=company_name, industry="Financial Services",
         status="qualified", score=85, reasoning="Good fit.", summary="A company.",
         key_facts=["fact1"], contacts=[], sources=["https://example.com"],
-        outreach_subject="Hi", outreach_body="Hello", first_seen_at=now, last_seen_at=now,
+        outreach_subject="Hi", outreach_body="Hello", approval_status=approval_status,
+        first_seen_at=now, last_seen_at=now,
     )
 
 
 def test_list_leads_returns_persisted_records(monkeypatch):
     class _FakeReadRepo:
-        def list_leads(self, status=None, limit=50, offset=0):
+        def list_leads(self, status=None, approval_status=None, limit=50, offset=0):
             return [_fake_record("acme.com", "Acme")]
 
     monkeypatch.setattr(leads_module, "build_lead_repository", lambda settings: _FakeReadRepo())
@@ -207,6 +208,24 @@ def test_list_leads_returns_persisted_records(monkeypatch):
     body = resp.json()
     assert len(body) == 1
     assert body[0]["domain"] == "acme.com"
+
+
+def test_list_leads_filters_by_approval_status(monkeypatch):
+    captured = {}
+
+    class _FakeReadRepo:
+        def list_leads(self, status=None, approval_status=None, limit=50, offset=0):
+            captured["approval_status"] = approval_status
+            return [_fake_record("acme.com", "Acme")]
+
+    monkeypatch.setattr(leads_module, "build_lead_repository", lambda settings: _FakeReadRepo())
+
+    client = _client_with_overrides(Settings(_env_file=None), JobStore())
+    resp = client.get("/v1/leads?approval_status=pending")
+
+    assert resp.status_code == 200
+    assert captured["approval_status"] == "pending"
+    assert resp.json()[0]["approval_status"] == "pending"
 
 
 def test_get_lead_returns_the_matching_record(monkeypatch):
@@ -234,3 +253,99 @@ def test_get_lead_returns_404_when_not_found(monkeypatch):
     resp = client.get("/v1/leads/nonexistent.com")
 
     assert resp.status_code == 404
+
+
+class _FakeApprovalRepo:
+    def __init__(self, record):
+        self._record = record
+        self.calls: list[tuple[str, str]] = []
+
+    def get_by_domain(self, domain):
+        return self._record if domain == self._record.domain else None
+
+    def set_approval_status(self, domain, approval_status):
+        self.calls.append((domain, approval_status))
+        self._record.approval_status = approval_status
+        return self._record
+
+
+def test_decide_lead_approval_approves_a_pending_lead(monkeypatch):
+    record = _fake_record("acme.com", "Acme", approval_status="pending")
+    repo = _FakeApprovalRepo(record)
+    monkeypatch.setattr(leads_module, "build_lead_repository", lambda settings: repo)
+
+    client = _client_with_overrides(Settings(_env_file=None), JobStore())
+    resp = client.post("/v1/leads/acme.com/approval", json={"decision": "approved"})
+
+    assert resp.status_code == 200
+    assert resp.json()["approval_status"] == "approved"
+    assert repo.calls == [("acme.com", "approved")]
+
+
+def test_decide_lead_approval_rejects_a_pending_lead(monkeypatch):
+    record = _fake_record("acme.com", "Acme", approval_status="pending")
+    repo = _FakeApprovalRepo(record)
+    monkeypatch.setattr(leads_module, "build_lead_repository", lambda settings: repo)
+
+    client = _client_with_overrides(Settings(_env_file=None), JobStore())
+    resp = client.post("/v1/leads/acme.com/approval", json={"decision": "rejected"})
+
+    assert resp.status_code == 200
+    assert resp.json()["approval_status"] == "rejected"
+
+
+def test_decide_lead_approval_404_for_unknown_domain(monkeypatch):
+    record = _fake_record("acme.com", "Acme", approval_status="pending")
+    repo = _FakeApprovalRepo(record)
+    monkeypatch.setattr(leads_module, "build_lead_repository", lambda settings: repo)
+
+    client = _client_with_overrides(Settings(_env_file=None), JobStore())
+    resp = client.post("/v1/leads/nonexistent.com/approval", json={"decision": "approved"})
+
+    assert resp.status_code == 404
+
+
+def test_decide_lead_approval_400_when_not_pending(monkeypatch):
+    record = _fake_record("acme.com", "Acme", approval_status="sent")
+    repo = _FakeApprovalRepo(record)
+    monkeypatch.setattr(leads_module, "build_lead_repository", lambda settings: repo)
+
+    client = _client_with_overrides(Settings(_env_file=None), JobStore())
+    resp = client.post("/v1/leads/acme.com/approval", json={"decision": "approved"})
+
+    assert resp.status_code == 400
+
+
+def test_mark_lead_sent_marks_an_approved_lead_as_sent(monkeypatch):
+    record = _fake_record("acme.com", "Acme", approval_status="approved")
+    repo = _FakeApprovalRepo(record)
+    monkeypatch.setattr(leads_module, "build_lead_repository", lambda settings: repo)
+
+    client = _client_with_overrides(Settings(_env_file=None), JobStore())
+    resp = client.post("/v1/leads/acme.com/sent")
+
+    assert resp.status_code == 200
+    assert resp.json()["approval_status"] == "sent"
+    assert repo.calls == [("acme.com", "sent")]
+
+
+def test_mark_lead_sent_404_for_unknown_domain(monkeypatch):
+    record = _fake_record("acme.com", "Acme", approval_status="approved")
+    repo = _FakeApprovalRepo(record)
+    monkeypatch.setattr(leads_module, "build_lead_repository", lambda settings: repo)
+
+    client = _client_with_overrides(Settings(_env_file=None), JobStore())
+    resp = client.post("/v1/leads/nonexistent.com/sent")
+
+    assert resp.status_code == 404
+
+
+def test_mark_lead_sent_400_when_not_approved(monkeypatch):
+    record = _fake_record("acme.com", "Acme", approval_status="pending")
+    repo = _FakeApprovalRepo(record)
+    monkeypatch.setattr(leads_module, "build_lead_repository", lambda settings: repo)
+
+    client = _client_with_overrides(Settings(_env_file=None), JobStore())
+    resp = client.post("/v1/leads/acme.com/sent")
+
+    assert resp.status_code == 400

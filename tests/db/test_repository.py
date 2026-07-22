@@ -168,6 +168,74 @@ def test_list_leads_respects_limit_and_offset():
     assert [r.domain for r in page] == ["beta.com"]
 
 
+def test_save_sets_pending_approval_status_for_new_qualified_lead():
+    repo, session_factory = _repository()
+    repo.save(_lead("acme.com"))
+
+    with session_factory() as session:
+        record = session.query(LeadRecord).filter_by(domain="acme.com").one()
+        assert record.approval_status == "pending"
+
+
+def test_save_never_sets_approval_status_for_disqualified_lead():
+    repo, session_factory = _repository()
+    lead = Lead(
+        research=ResearchBrief(company_name="Acme", domain="acme.com", summary="A company."),
+        qualification=Qualification(score=10, reasoning="not a fit"),
+        status="disqualified",
+    )
+    repo.save(lead)
+
+    with session_factory() as session:
+        record = session.query(LeadRecord).filter_by(domain="acme.com").one()
+        assert record.approval_status is None
+
+
+def test_save_does_not_overwrite_existing_approval_status_on_resave():
+    repo, session_factory = _repository()
+    repo.save(_lead("acme.com"))
+    repo.set_approval_status("acme.com", "approved")
+
+    repo.save(_lead("acme.com", company_name="Acme Renamed"))  # re-saved, e.g. re-researched
+
+    with session_factory() as session:
+        record = session.query(LeadRecord).filter_by(domain="acme.com").one()
+        assert record.company_name == "Acme Renamed"
+        assert record.approval_status == "approved"  # untouched by the re-save
+
+
+def test_list_leads_filters_by_approval_status():
+    repo, session_factory = _repository()
+    base = datetime.now(timezone.utc)
+    _insert_record(session_factory, "acme.com", last_seen_at=base)
+    _insert_record(session_factory, "beta.com", company_name="Beta", last_seen_at=base + timedelta(seconds=10))
+    with session_factory() as session:
+        session.query(LeadRecord).filter_by(domain="acme.com").one().approval_status = "pending"
+        session.query(LeadRecord).filter_by(domain="beta.com").one().approval_status = "approved"
+        session.commit()
+
+    pending = repo.list_leads(approval_status="pending")
+    approved = repo.list_leads(approval_status="approved")
+
+    assert [r.domain for r in pending] == ["acme.com"]
+    assert [r.domain for r in approved] == ["beta.com"]
+
+
+def test_set_approval_status_updates_and_returns_the_record():
+    repo, session_factory = _repository()
+    repo.save(_lead("acme.com"))
+
+    updated = repo.set_approval_status("acme.com", "approved")
+
+    assert updated is not None
+    assert updated.approval_status == "approved"
+
+
+def test_set_approval_status_returns_none_for_unknown_domain():
+    repo, _ = _repository()
+    assert repo.set_approval_status("nonexistent.com", "approved") is None
+
+
 def test_get_by_domain_returns_the_matching_record():
     repo, session_factory = _repository()
     _insert_record(session_factory, "acme.com", company_name="Acme")
